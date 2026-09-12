@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Band-Apps installieren</title>
+<style>
+:root{--bg:#0a0a0c;--card:#141417;--line:#2a2a31;--text:#f2efe9;--muted:#9b9ba3;--tg:#b23a3a;--dor:#e8317e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:calc(28px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom))}
+main{max-width:520px;margin:0 auto}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 28px}
+.app{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);padding:16px;margin-bottom:14px}
+.app img{width:66px;height:66px;flex:none;border-radius:14px;border:1px solid var(--line)}
+.app .t{min-width:0;flex:1}
+.app b{display:block;font-size:19px;line-height:1.2}
+.app span{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.go{display:block;text-align:center;text-decoration:none;color:#fff;font-weight:600;letter-spacing:.04em;padding:13px;margin-top:2px}
+.tg .go{background:var(--tg)}
+.dor .go{background:var(--dor)}
+.go:active{opacity:.8}
+ol{color:var(--muted);font-size:14.5px;padding-left:20px;margin:26px 0 0}
+li{margin-bottom:8px}
+.note{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Band-Apps installieren</h1>
+  <p class="sub">Direkt aufs iPhone, ohne TestFlight. Diese Seite in Safari öffnen.</p>
+
+  <div class="app tg">
+    <img src="thy-gnosis-icon.png" alt="Thy Gnosis">
+    <div class="t">
+      <b>Thy Gnosis</b>
+      <span>Konzerte, Alben, Player, Galerie</span>
+    </div>
+  </div>
+  <a class="go" style="background:#b23a3a" href="itms-services://?action=download-manifest&amp;url=https://sebastianbuergy-oss.github.io/band-apps-install/thy-gnosis.plist">Thy Gnosis installieren</a>
+
+  <div class="app dor" style="margin-top:22px">
+    <img src="days-of-ruin-icon.png" alt="Days of Ruin">
+    <div class="t">
+      <b>Days of Ruin</b>
+      <span>Shows, EP, Player, Fotos</span>
+    </div>
+  </div>
+  <a class="go" style="background:#e8317e" href="itms-services://?action=download-manifest&amp;url=https://sebastianbuergy-oss.github.io/band-apps-install/days-of-ruin.plist">Days of Ruin installieren</a>
+
+  <ol>
+    <li>Auf «Installieren» tippen, dann im Hinweis von iOS nochmals auf «Installieren».</li>
+    <li>Die App landet auf dem Home-Bildschirm und startet direkt. Kein Profil, kein Vertrauen-Dialog nötig.</li>
+    <li>Falls nichts passiert: Seite in Safari öffnen, nicht in einer anderen App.</li>
+  </ol>
+
+  <p class="note">Signiert für Sebastians iPhone 17 Pro und Lynns iPhone 15 Pro Max. Auf anderen Geräten bricht die Installation ab. Neue Version? Einfach nochmals installieren, sie überschreibt die alte.</p>
+</main>
+</body>
+</html>
