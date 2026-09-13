@@ -115,7 +115,7 @@ p{margin:0 0 12px;max-width:62ch}
 
 /* facts strip */
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:24px}
-.facts div{background:var(--surface);padding:14px 16px}
+.facts > div{background:var(--surface);padding:14px 16px}
 .facts .k{font-family:var(--cond);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .facts .v{font-family:var(--cond);font-size:20px;font-weight:600;line-height:1.15;margin-top:4px}
 
@@ -129,8 +129,8 @@ p{margin:0 0 12px;max-width:62ch}
 .gig .v{color:var(--muted);font-size:15px}
 .gig .with{font-size:14px;margin-top:4px}
 .gig .with span{color:var(--muted)}
-.gig .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{font-family:var(--cond);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--line2);color:var(--muted);text-decoration:none}
+.gig .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;min-height:32px;font-family:var(--cond);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--line2);color:var(--muted);text-decoration:none}
 .chip.rel{border-color:var(--blood2);color:var(--bone)}
 a.chip:hover{color:var(--bone);border-color:var(--bone)}
 .gig .fl{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
@@ -155,7 +155,7 @@ a.chip:hover{color:var(--bone);border-color:var(--bone)}
 .tracks li span:first-child{color:var(--muted);width:22px;flex:none}
 .tracks li span:nth-child(2){flex:1}
 .tracks li span:last-child{color:var(--muted);font-family:var(--cond)}
-.stream{display:flex;flex-wrap:wrap;gap:6px}
+.stream{display:flex;flex-wrap:wrap;gap:8px}
 
 /* videos */
 .vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
@@ -168,7 +168,8 @@ a.chip:hover{color:var(--bone);border-color:var(--bone)}
 
 /* band */
 .members{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
-.members div{background:var(--surface);padding:14px 16px}
+.members > div{background:var(--surface);padding:14px 16px}
+@media (max-width:485px){.members > div:last-child:nth-child(odd){grid-column:1/-1}}
 .members b{font-family:var(--cond);font-size:20px;font-weight:600;display:block;line-height:1.1}
 .members span{font-family:var(--cond);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .members i{display:block;font-style:normal;font-size:13px;color:var(--dim);margin-top:4px}
@@ -212,7 +213,7 @@ figcaption{font-size:13px;color:var(--muted)}
 .lb.open{display:flex}
 .lb img{max-width:100%;max-height:88vh;object-fit:contain;border:1px solid var(--line2)}
 .lb .cap{position:absolute;bottom:calc(14px + var(--sab));left:0;right:0;text-align:center;font-family:var(--cond);font-size:14px;letter-spacing:.08em;color:var(--muted)}
-.lb .x{position:absolute;top:calc(12px + var(--sat));right:16px;font-size:34px;line-height:1;color:var(--bone)}
+.lb .x{position:absolute;top:calc(12px + var(--sat));right:16px;width:44px;height:44px;display:grid;place-items:center;font-size:34px;line-height:1;color:var(--bone)}
 
 footer{border-top:1px solid var(--line);margin-top:40px;padding:20px 16px;font-size:13px;color:var(--dim);text-align:center}
 footer a{color:var(--muted)}
@@ -330,7 +331,7 @@ footer a{color:var(--muted)}
         </ol>
         <p class="note">Mix &amp; Mastering: Hannes Grossmann, Mordor Sounds Studio. Self-released. Auch als Kassette und Album-Shirt im Shop.</p>
         <div class="stream">
-          <a class="chip rel" href="https://thygnosis.bandcamp.com/album/deprive-of-vision" target="_blank" rel="noopener">Bandcamp · CHF/EUR 9</a>
+          <a class="chip rel" href="https://thygnosis.bandcamp.com/album/deprive-of-vision" target="_blank" rel="noopener">Bandcamp · EUR 9</a>
           <a class="chip" href="https://open.spotify.com/intl-de/album/3fKDxZTsXITX0iHWgIIb5e" target="_blank" rel="noopener">Spotify</a>
           <a class="chip" href="https://music.apple.com/ch/album/deprive-of-vision/1805580531" target="_blank" rel="noopener">Apple Music</a>
           <a class="chip" href="https://tidal.com/album/427276493" target="_blank" rel="noopener">Tidal</a>
@@ -541,8 +542,6 @@ const flyerCaps = {
 };
 const photos = [
   ['band.jpg','Pressefoto (thygnosis.com)'],
-  ['band2.jpg','Bandfoto (Bandcamp)'],
-  ['band3.jpg','Bandfoto (Metal Archives)'],
   ['logo.png','Logo'],
   ['cover-dov.jpg','Cover «Deprive of Vision»'],
   ['cover-sero.jpg','Cover «Seroconversion»']
@@ -579,19 +578,21 @@ const links = [
 ];
 const esc = s => String(s ?? '').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const safeUrl = u => /^(https?:|mailto:)/.test(String(u||'')) ? String(u) : '';
+const BAND = 'Thy Gnosis';
+const others = s => String(s||'').split(',').map(x=>x.trim()).filter(x=>x && x.toLowerCase()!==BAND.toLowerCase()).join(', ');
 
 /* ---------- static sections ---------- */
-document.getElementById('past').innerHTML = past.map(g=>`
+document.getElementById('past').innerHTML = past.map(g=>{ const w=others(g.w); return `
   <div class="gig">
     <div class="d"><b>${g.d}</b><span>${g.m}</span><i>${g.y}</i></div>
     <div>
       <h3>${esc(g.t)}</h3>
       <div class="v">${esc(g.v)}</div>
-      <div class="with"><span>mit</span> ${esc(g.w)}${g.n?` <span>· ${esc(g.n)}</span>`:''}</div>
+      ${w||g.n?`<div class="with">${w?`<span>mit</span> ${esc(w)}`:''}${g.n?`${w?' ':''}<span>${w?'· ':''}${esc(g.n)}</span>`:''}</div>`:''}
       <div class="tags">${g.rel?'<span class="chip rel">Plattentaufe</span>':''}${g.links.map(l=>`<a class="chip" href="${l[1]}" target="_blank" rel="noopener">${esc(l[0])}</a>`).join('')}</div>
     </div>
     ${g.fl?`<div class="fl">${g.fl.map(f=>`<img src="img/${f}" alt="Flyer" data-cap="${esc(flyerCaps[f]||'')}" class="zoomimg">`).join('')}</div>`:''}
-  </div>`).join('');
+  </div>`; }).join('');
 document.getElementById('flyers').innerHTML = Object.entries(flyerCaps).map(([f,c])=>`<button class="zoom" data-src="img/${f}" data-cap="${esc(c)}"><figure><img src="img/${f}" alt="${esc(c)}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure></button>`).join('');
 document.getElementById('photos').innerHTML = photos.map(([f,c])=>`<button class="zoom" data-src="img/${f}" data-cap="${esc(c)}"><figure><img src="img/${f}" alt="${esc(c)}" loading="lazy" style="${f.endsWith('.png')?'object-fit:contain;background:#000;padding:12px':''}"><figcaption>${esc(c)}</figcaption></figure></button>`).join('');
 document.getElementById('shop').innerHTML = shop.map(([f,n,p])=>`<a class="item" href="https://thygnosis.com/shop" target="_blank" rel="noopener"><img src="img/${f}" alt="${esc(n)}" loading="lazy"><div class="t"><b>${esc(n)}</b><div class="p">CHF ${p}</div></div></a>`).join('');
@@ -599,9 +600,14 @@ document.getElementById('alllinks').innerHTML = links.map(l=>`<a href="${l[2]}" 
 
 /* ---------- live data: upcoming shows + news ---------- */
 let countdownTimer = null;
-function parseDate(g){ return new Date(`${g.date}T${g.time||'20:00'}:00+02:00`); }
+// Gig times are Swiss wall-clock times: resolve them in Europe/Zurich (CET/CEST), whatever the device zone is.
+const ZURICH = new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Zurich',hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'});
+function zurichOffset(ms){ const p=Object.fromEntries(ZURICH.formatToParts(new Date(ms)).map(x=>[x.type,x.value])); return Date.UTC(+p.year,p.month-1,+p.day,p.hour%24,+p.minute,+p.second) - Math.floor(ms/1000)*1000; }
+function zurichTime(date, time){ const [y,mo,d]=String(date).split('-').map(Number), [h,mi]=(/^\d{1,2}:\d{2}$/.test(time||'')?time:'20:00').split(':').map(Number); const wall=Date.UTC(y,mo-1,d,h,mi); if(!isFinite(wall)) return new Date(NaN); return new Date(wall - zurichOffset(wall - zurichOffset(wall))); }
+function parseDate(g){ return zurichTime(g.date, g.time); }
 function dateParts(iso){ const d=new Date(iso+'T12:00:00'); return {d:String(d.getDate()).padStart(2,'0'), m:MONTHS[d.getMonth()], y:String(d.getFullYear()), w:WEEKDAYS[d.getDay()]}; }
-function fmtStamp(iso){ const p=dateParts(iso); return `${p.d}.${String(new Date(iso+'T12:00:00').getMonth()+1).padStart(2,'0')}.${p.y}`; }
+function fmtDay(d){ return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
+function fmtStamp(iso){ return fmtDay(new Date(iso+'T12:00:00')); }
 
 function renderUpcoming(list, meta){
   const box = document.getElementById('upcoming');
@@ -611,7 +617,7 @@ function renderUpcoming(list, meta){
     box.innerHTML = '<div class="empty">Zurzeit sind keine Konzerte angekündigt. Sobald die Band ein Datum veröffentlicht, erscheint es hier.</div>';
   } else {
     box.innerHTML = gigs.map(g=>{
-      const p = dateParts(g.date);
+      const p = dateParts(g.date), w = others(g.lineup);
       const tags = [];
       if(safeUrl(g.tickets)) tags.push(`<a class="chip rel" href="${safeUrl(g.tickets)}" target="_blank" rel="noopener">Tickets</a>`);
       if(safeUrl(g.url)) tags.push(`<a class="chip" href="${safeUrl(g.url)}" target="_blank" rel="noopener">Details</a>`);
@@ -620,8 +626,8 @@ function renderUpcoming(list, meta){
         <div class="d"><b>${p.d}</b><span>${p.m}</span><i>${p.y}</i></div>
         <div>
           <h3>${esc(g.title)}</h3>
-          <div class="v">${esc([g.venue,g.city].filter(Boolean).join(', '))}${g.time?` · ${p.w}, ${esc(g.time)}`:''}</div>
-          ${g.lineup?`<div class="with"><span>mit</span> ${esc(g.lineup)}</div>`:''}
+          <div class="v">${esc([g.venue,g.city].filter(Boolean).join(', '))}${g.time?` · ${p.w}\u00a0${esc(g.time)}`:''}</div>
+          ${w?`<div class="with"><span>mit</span> ${esc(w)}</div>`:''}
           ${g.note?`<div class="with"><span>${esc(g.note)}</span></div>`:''}
           <div class="tags">${tags.join('')}</div>
         </div>
@@ -655,7 +661,7 @@ function renderNext(g){
     <div class="body">
       <p class="eyebrow" style="margin-bottom:4px">Nächstes Konzert</p>
       <h3>${esc(g.title)}</h3>
-      <div class="venue">${esc([g.venue,g.city].filter(Boolean).join(', '))}${g.lineup?` · mit ${esc(g.lineup)}`:''}</div>
+      <div class="venue">${esc([g.venue,g.city].filter(Boolean).join(', '))}${others(g.lineup)?` · mit ${esc(others(g.lineup))}`:''}</div>
       <div class="count" id="count" aria-label="Countdown"></div>
       <div class="btns">${btns.join('')}</div>
     </div>`;
@@ -700,11 +706,23 @@ function bitToGig(e){
   };
 }
 
+// Last Bandsintown answer. Both loaders render through renderGigs(), so whichever
+// answers last never drops dates the other one knows.
+let bitGigs = null, bitMeta = '';
+function renderGigs(feedList, feedMeta){
+  if(!bitGigs){ renderUpcoming(feedList, feedMeta); return; }
+  // Bandsintown is the band's own calendar: it wins over the feed for dates,
+  // but feed entries add tickets/notes for the same day.
+  const merged = bitGigs.map(g=>{ const f=(feedList||[]).find(x=>x.date===g.date); return f ? {...g, ...Object.fromEntries(Object.entries(f).filter(([k,v])=>v))} : g; });
+  for(const f of feedList||[]) if(!merged.find(g=>g.date===f.date)) merged.push(f);
+  renderUpcoming(merged, bitMeta);
+}
+
 async function loadFeed(){
   const cached = (()=>{ try{ return JSON.parse(localStorage.getItem('tg-feed')||'null'); }catch(e){ return null; } })();
-  let feed = cached || bundled, feedMeta = cached ? `Stand ${fmtStamp(cached.updated||bundled.updated)}` : `Stand ${fmtStamp(bundled.updated)} (gebündelt)`;
-  let upcoming = feed.upcoming, upMeta = feedMeta;
-  renderUpcoming(upcoming, upMeta); renderNews(feed.news, feedMeta);
+  const useCached = cached && String(cached.updated||'') >= bundled.updated;
+  let feed = useCached ? cached : bundled, feedMeta = useCached ? `Stand ${fmtStamp(cached.updated)}` : `Stand ${fmtStamp(bundled.updated)} (gebündelt)`;
+  renderGigs(feed.upcoming, feedMeta); renderNews(feed.news, feedMeta);
 
   const jobs = [];
   jobs.push(fetch(FEED_URL + '?t=' + Date.now(), {cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{
@@ -713,18 +731,14 @@ async function loadFeed(){
       feedMeta = `Live · Feed vom ${fmtStamp(j.updated||bundled.updated)}`;
       if(j.message) feedMeta += ' · ' + j.message;
       renderNews(j.news, feedMeta);
-      upcoming = j.upcoming; upMeta = feedMeta;
-      renderUpcoming(upcoming, upMeta);
+      renderGigs(j.upcoming, feedMeta);
     }
   }).catch(()=>{}));
   jobs.push(fetch(BIT_URL, {cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(events=>{
     if(!Array.isArray(events)) return;
-    const live = events.map(bitToGig).filter(g=>g.date);
-    // Bandsintown is the band's own calendar: it wins over the feed for dates,
-    // but feed entries add tickets/notes for the same day.
-    const merged = live.map(g=>{ const f=(feed.upcoming||[]).find(x=>x.date===g.date); return f ? {...g, ...Object.fromEntries(Object.entries(f).filter(([k,v])=>v))} : g; });
-    for(const f of feed.upcoming||[]) if(!merged.find(g=>g.date===f.date)) merged.push(f);
-    renderUpcoming(merged, 'Live · Bandsintown ' + new Date().toLocaleDateString('de-CH'));
+    bitGigs = events.map(bitToGig).filter(g=>g.date);
+    bitMeta = 'Live · Bandsintown ' + fmtDay(new Date());
+    renderGigs(feed.upcoming, feedMeta);
   }).catch(()=>{}));
   await Promise.allSettled(jobs);
 }
@@ -734,8 +748,12 @@ window.addEventListener('app-active', ()=>loadFeed());
 /* ---------- Bandcamp players (loaded once a view with players is shown) ---------- */
 function loadPlayers(scope){
   scope.querySelectorAll('.player:not(.loaded)').forEach(p=>{
+    const ph = p.querySelector('.ph');
+    // Offline: no blank iframe, just a hint; the 'online' listener below loads it later.
+    if(ph) ph.lastChild.textContent = navigator.onLine ? 'Player wird geladen' : 'Player braucht Internet';
+    if(!navigator.onLine || p.querySelector('iframe')) return;
     const f = document.createElement('iframe');
-    f.src = `https://bandcamp.com/EmbeddedPlayer/album=${p.dataset.album}/size=large/bgcol=16161a/linkcol=e7e2d8/tracklist=false/artwork=none/transparent=true/`;
+    f.src = `https://bandcamp.com/EmbeddedPlayer/album=${p.dataset.album}/size=large/bgcol=16161a/linkcol=e7e2d8/tracklist=false/artwork=none/transparent=true/t=1/`;
     f.title = `Bandcamp-Player: ${p.dataset.title}`;
     f.setAttribute('seamless','');
     f.setAttribute('allow','autoplay; encrypted-media');
@@ -743,6 +761,7 @@ function loadPlayers(scope){
     p.appendChild(f);
   });
 }
+window.addEventListener('online', ()=>{ const v=document.querySelector('.view.active'); if(v) loadPlayers(v); });
 
 /* ---------- navigation ---------- */
 const views = [...document.querySelectorAll('.view')], navBtns=[...document.querySelectorAll('.nav button')];
@@ -761,13 +780,14 @@ go(location.hash.slice(1)||'start',false);
 
 /* ---------- lightbox ---------- */
 const lb=document.getElementById('lb'), lbImg=lb.querySelector('img'), lbCap=lb.querySelector('.cap');
-function openLb(src,cap){lbImg.src=src;lbImg.alt=cap;lbCap.textContent=cap;lb.classList.add('open')}
+function openLb(src,cap){lbImg.src=src;lbImg.alt=cap;lbCap.textContent=cap;lb.classList.add('open');document.documentElement.style.overflow='hidden'}
+function closeLb(){lb.classList.remove('open');document.documentElement.style.overflow=''}
 document.addEventListener('click',e=>{
   const z=e.target.closest('.zoom'); if(z){openLb(z.dataset.src,z.dataset.cap||'');return}
   const zi=e.target.closest('.zoomimg'); if(zi){openLb(zi.src,zi.dataset.cap||'');return}
-  if(e.target.closest('#lb')) lb.classList.remove('open');
+  if(e.target.closest('#lb')) closeLb();
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLb()});
 </script>
 </body>
 </html>
