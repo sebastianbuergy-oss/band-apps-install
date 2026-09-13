@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b0b0d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Thy Gnosis</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{
+  --bg:#0b0b0d; --bg2:#101013; --surface:#16161a; --surface2:#1d1d22; --line:#2a2a30; --line2:#3a3a42;
+  --text:#e7e2d8; --muted:#9c978d; --dim:#6d6960;
+  --blood:#8e2b2b; --blood2:#b23a3a; --bone:#f1ede4;
+  --display:"Pirata One","Barlow Condensed",Impact,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --rail:220px; --tab:64px; --max:1080px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{color-scheme:dark;-webkit-text-size-adjust:100%;overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:rgba(255,255,255,.08);overscroll-behavior-y:none}
+a{color:inherit}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--bone);outline-offset:2px}
+
+/* shell */
+.shell{min-height:100vh;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 16px;padding-top:calc(10px + var(--sat));background:rgba(11,11,13,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top img{width:34px;height:31px}
+.top .name{font-family:var(--display);font-size:24px;letter-spacing:.02em;line-height:1}
+.top .sub{font-family:var(--cond);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.top .live{margin-left:auto;font-family:var(--cond);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone);background:var(--blood);padding:5px 10px;border-radius:2px;text-decoration:none;white-space:nowrap;min-width:0;max-width:62%;overflow:hidden;text-overflow:ellipsis}
+.top .live:empty{display:none}
+main{flex:1;padding:0 0 calc(var(--tab) + var(--sab) + 24px)}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 16px}
+.view{display:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:.4}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.view.active{animation:none}}
+
+/* nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;height:calc(var(--tab) + var(--sab));padding-bottom:var(--sab);display:grid;grid-template-columns:repeat(6,1fr);background:rgba(11,11,13,.96);border-top:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--cond);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-top:2px solid transparent}
+.nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nav button.on{color:var(--bone);border-top-color:var(--blood2)}
+.nav .brand{display:none}
+@media (min-width:900px){
+  .shell{flex-direction:row}
+  .nav{position:sticky;top:0;bottom:auto;height:100vh;width:var(--rail);grid-template-columns:1fr;grid-auto-rows:min-content;align-content:start;border-top:0;border-right:1px solid var(--line);padding:24px 0}
+  .nav button{flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 22px;font-size:14px;border-top:0;border-left:2px solid transparent}
+  .nav button.on{border-left-color:var(--blood2);background:var(--bg2)}
+  .nav .brand{display:flex;align-items:center;gap:10px;padding:0 22px 22px}
+  .nav .brand img{width:40px}
+  .nav .brand b{font-family:var(--display);font-weight:400;font-size:26px;line-height:1}
+  .content{flex:1;min-width:0}
+  main{padding-bottom:48px}
+  .top .name,.top .sub,.top img{display:none}
+  .top{justify-content:flex-end}
+}
+
+/* type */
+h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
+h2.sec{font-family:var(--display);font-size:38px;line-height:1;letter-spacing:.01em;margin:32px 0 6px}
+.eyebrow{font-family:var(--cond);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+p{margin:0 0 12px;max-width:62ch}
+.lead{font-size:18px;color:var(--text)}
+.note{font-size:14px;color:var(--muted)}
+.rule{height:1px;background:var(--line);margin:28px 0}
+.stamp{font-family:var(--cond);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:10px}
+.stamp.live{color:var(--muted)}
+
+/* hero */
+.hero{position:relative;background:#000 url(img/texture.jpg) center/cover no-repeat;border-bottom:1px solid var(--line)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,13,.35),rgba(11,11,13,.92))}
+.hero .in{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:36px 16px 28px;text-align:center}
+.hero .logo{width:min(520px,80%);margin:0 auto 14px;filter:drop-shadow(0 4px 24px rgba(0,0,0,.8))}
+.hero .tag{font-family:var(--cond);font-size:14px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.hero .tag b{color:var(--bone);font-weight:600}
+
+/* next show card */
+.next{margin:20px 0 0;border:1px solid var(--line2);background:linear-gradient(180deg,var(--surface2),var(--surface));display:grid;grid-template-columns:auto 1fr;overflow:hidden}
+.next.none{grid-template-columns:1fr}
+.next .date{background:var(--blood);color:var(--bone);padding:16px 18px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:var(--cond);line-height:1;min-width:92px}
+.next .date .d{font-size:44px;font-weight:700}
+.next .date .m{font-size:14px;letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+.next .date .w{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-top:6px}
+.next .body{padding:16px 18px;min-width:0}
+.next h3{font-family:var(--cond);font-size:24px;font-weight:600;line-height:1.1}
+.next .venue{color:var(--muted);margin:4px 0 10px}
+.count{display:flex;gap:14px;font-family:var(--cond);font-variant-numeric:tabular-nums;margin:8px 0 12px}
+.count div{text-align:center}.count b{display:block;font-size:26px;font-weight:600;line-height:1}.count span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--cond);font-size:14px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;padding:9px 14px;border:1px solid var(--line2);background:var(--bg);color:var(--bone)}
+.btn.primary{background:var(--bone);color:#111;border-color:var(--bone)}
+.btn:hover{border-color:var(--bone)}
+
+/* news */
+.news{display:grid;gap:8px}
+.item-news{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:14px 16px;border:1px solid var(--line);background:var(--surface);text-decoration:none}
+.item-news:hover{border-color:var(--bone)}
+.item-news .d{font-family:var(--cond);line-height:1;text-align:center;min-width:44px}
+.item-news .d b{display:block;font-size:24px;font-weight:700}
+.item-news .d span{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.item-news .d i{display:block;font-style:normal;font-size:11px;color:var(--dim);margin-top:2px}
+.item-news h3{font-family:var(--cond);font-size:19px;font-weight:600;line-height:1.15}
+.item-news p{font-size:14px;color:var(--muted);margin:4px 0 0}
+.item-news .src{font-family:var(--cond);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:6px}
+
+/* facts strip */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:24px}
+.facts div{background:var(--surface);padding:14px 16px}
+.facts .k{font-family:var(--cond);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.facts .v{font-family:var(--cond);font-size:20px;font-weight:600;line-height:1.15;margin-top:4px}
+
+/* concerts */
+.gig{display:grid;grid-template-columns:72px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.gig .d{font-family:var(--cond);line-height:1;text-align:center;padding-top:2px}
+.gig .d b{display:block;font-size:30px;font-weight:700}
+.gig .d span{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.gig .d i{display:block;font-style:normal;font-size:12px;color:var(--dim);margin-top:2px}
+.gig h3{font-family:var(--cond);font-size:20px;font-weight:600;line-height:1.15}
+.gig .v{color:var(--muted);font-size:15px}
+.gig .with{font-size:14px;margin-top:4px}
+.gig .with span{color:var(--muted)}
+.gig .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-family:var(--cond);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--line2);color:var(--muted);text-decoration:none}
+.chip.rel{border-color:var(--blood2);color:var(--bone)}
+a.chip:hover{color:var(--bone);border-color:var(--bone)}
+.gig .fl{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.gig .fl img{width:72px;height:96px;object-fit:cover;border:1px solid var(--line2);cursor:zoom-in}
+.empty{padding:18px;border:1px dashed var(--line2);color:var(--muted);font-size:15px}
+
+/* music */
+.album{display:grid;grid-template-columns:1fr;gap:18px;padding:22px 0;border-bottom:1px solid var(--line)}
+@media (min-width:640px){.album{grid-template-columns:240px 1fr}}
+.album .zoom{align-self:start}
+.album img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--line2)}
+.album h3{font-family:var(--display);font-size:32px;line-height:1}
+.album .meta{font-family:var(--cond);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:4px 0 10px}
+.player{margin:0 0 14px;border:1px solid var(--line2);background:var(--surface);min-height:120px;position:relative}
+.player iframe{display:block;width:100%;height:120px;border:0}
+.player .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--cond);font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);pointer-events:none}
+.player.loaded .ph{display:none}
+.player .ph svg{width:18px;height:18px;fill:var(--muted)}
+.tracks{list-style:none;margin:0 0 12px;padding:0;columns:1;font-variant-numeric:tabular-nums}
+@media (min-width:640px){.tracks.two{columns:2;column-gap:28px}}
+.tracks li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line);font-size:15px;break-inside:avoid}
+.tracks li span:first-child{color:var(--muted);width:22px;flex:none}
+.tracks li span:nth-child(2){flex:1}
+.tracks li span:last-child{color:var(--muted);font-family:var(--cond)}
+.stream{display:flex;flex-wrap:wrap;gap:6px}
+
+/* videos */
+.vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.vid{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);background:var(--surface);text-decoration:none}
+.vid:hover{border-color:var(--bone)}
+.vid .play{flex:none;width:40px;height:40px;border-radius:50%;background:var(--blood);display:grid;place-items:center}
+.vid .play svg{width:16px;height:16px;fill:var(--bone);margin-left:2px}
+.vid b{font-family:var(--cond);font-size:17px;font-weight:600;display:block;line-height:1.1}
+.vid span{font-size:13px;color:var(--muted)}
+
+/* band */
+.members{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.members div{background:var(--surface);padding:14px 16px}
+.members b{font-family:var(--cond);font-size:20px;font-weight:600;display:block;line-height:1.1}
+.members span{font-family:var(--cond);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.members i{display:block;font-style:normal;font-size:13px;color:var(--dim);margin-top:4px}
+.quote{border-left:2px solid var(--blood2);padding:6px 0 6px 16px;margin:14px 0}
+.quote p{font-size:17px;font-style:italic;margin:0 0 6px}
+.quote cite{font-style:normal;font-family:var(--cond);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.quote cite a{color:var(--muted)}
+.scores{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 0}
+.score{border:1px solid var(--line2);padding:10px 14px;min-width:120px}
+.score b{font-family:var(--cond);font-size:26px;font-weight:700;display:block;line-height:1}
+.score small{font-size:14px;color:var(--muted)}
+.score span{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-family:var(--cond)}
+.band-photo{border:1px solid var(--line2);margin:12px 0 6px}
+figcaption{font-size:13px;color:var(--muted)}
+
+/* gallery + links */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.grid button{border:1px solid var(--line);background:var(--surface);overflow:hidden;text-align:left}
+.grid img{width:100%;aspect-ratio:3/4;object-fit:cover;transition:transform .3s}
+.grid button:hover img{transform:scale(1.03)}
+.grid figure{margin:0}
+.grid figcaption{padding:6px 8px;font-family:var(--cond);font-size:12px;letter-spacing:.06em}
+.grid.wide{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.grid.wide img{aspect-ratio:3/2}
+.linklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.linklist a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);text-decoration:none;font-family:var(--cond);font-size:16px}
+.linklist a small{color:var(--muted);font-size:12px;letter-spacing:.1em;text-transform:uppercase;text-align:right}
+.linklist a:hover{border-color:var(--bone)}
+
+/* shop */
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.item{border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;text-decoration:none}
+.item:hover{border-color:var(--bone)}
+.item img{width:100%;aspect-ratio:1;object-fit:contain;background:#fff;padding:8px}
+.item .t{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.item b{font-family:var(--cond);font-size:16px;font-weight:600;line-height:1.15}
+.item .p{margin-top:auto;font-family:var(--cond);font-size:18px;font-variant-numeric:tabular-nums}
+
+/* lightbox */
+.lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:16px}
+.lb.open{display:flex}
+.lb img{max-width:100%;max-height:88vh;object-fit:contain;border:1px solid var(--line2)}
+.lb .cap{position:absolute;bottom:calc(14px + var(--sab));left:0;right:0;text-align:center;font-family:var(--cond);font-size:14px;letter-spacing:.08em;color:var(--muted)}
+.lb .x{position:absolute;top:calc(12px + var(--sat));right:16px;font-size:34px;line-height:1;color:var(--bone)}
+
+footer{border-top:1px solid var(--line);margin-top:40px;padding:20px 16px;font-size:13px;color:var(--dim);text-align:center}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<!-- app -->
+<div class="shell">
+<nav class="nav" aria-label="Bereiche">
+  <div class="brand"><img src="img/symbol.png" alt=""><b>Thy Gnosis</b></div>
+  <button data-v="start" class="on"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/></svg>Start</button>
+  <button data-v="konzerte"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Konzerte</button>
+  <button data-v="musik"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg>Musik</button>
+  <button data-v="band"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 3-6.5 6.5-6.5s6.5 2.5 6.5 6.5M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20c0-3-1.5-5-4-6"/></svg>Band</button>
+  <button data-v="galerie"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg>Galerie</button>
+  <button data-v="shop"><svg viewBox="0 0 24 24"><path d="M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0"/></svg>Shop</button>
+</nav>
+
+<div class="content">
+<header class="top">
+  <img src="img/symbol.png" alt="">
+  <div><div class="name">Thy Gnosis</div><div class="sub">Bern · Prog Tech Death</div></div>
+  <a class="live" id="livebadge" href="#konzerte" data-go="konzerte"></a>
+</header>
+
+<main>
+
+<!-- START -->
+<section class="view active" id="v-start">
+  <div class="hero"><div class="in">
+    <img class="logo" src="img/logo.png" alt="Thy Gnosis Logo">
+    <div class="tag"><b>Blackened progressive technical death metal</b> · Bern, Schweiz</div>
+  </div></div>
+  <div class="wrap">
+    <div class="next" id="next"></div>
+    <div class="stamp" id="stamp-next"></div>
+
+    <h2 class="sec">Neuigkeiten</h2>
+    <div class="news" id="news"></div>
+    <div class="stamp" id="stamp-news"></div>
+
+    <div class="facts">
+      <div><div class="k">Zuletzt erschienen</div><div class="v">Deprive of Vision</div><div class="note">Album · 13.02.2026</div></div>
+      <div><div class="k">Herkunft</div><div class="v">Bern</div><div class="note">Aktiv seit 2022</div></div>
+      <div><div class="k">Label</div><div class="v">Unabhängig</div><div class="note">Self-released</div></div>
+      <div><div class="k">Kritik</div><div class="v">8.3 / 10</div><div class="note">Metal Factory</div></div>
+    </div>
+
+    <h2 class="sec">Über die Band</h2>
+    <p class="lead">Thy Gnosis verbinden brachiale Riffs mit düsteren Melodien und der technischen Intensität eines «asynchronen Dampfmotors», wie die Band selbst schreibt.</p>
+    <p>Das Quintett aus Bern spielt progressiven, schwarz eingefärbten Tech-Death. Nach dem Debüt <em>Seroconversion</em> (2023) und vier Singles im Herbst 2025 erschien am 13. Februar 2026 das zweite Album <em>Deprive of Vision</em>, gemischt und gemastert von Hannes Grossmann (ex-Obscura, Alkaloid) im Mordor Sounds Studio. Die Plattentaufe fand am selben Abend an der «Night of Death II» in der Kulturhalle Sägegasse Burgdorf statt.</p>
+    <p>Live war die Band bisher vor allem in der Deutschschweiz und in Genf unterwegs, unter anderem als Support für Be'lakor (Exil Zürich, ausverkauft) und neben Hour of Penance.</p>
+
+    <h2 class="sec">Reinhören</h2>
+    <p class="note">Der Bandcamp-Player spielt die Songs direkt hier ab. Kaufen und Download bei Bandcamp.</p>
+    <div class="player" data-album="3865331985" data-title="Deprive of Vision"><div class="ph"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>Player wird geladen</div></div>
+    <div class="btns"><a class="btn" href="https://thygnosis.bandcamp.com/album/deprive-of-vision" target="_blank" rel="noopener">Bei Bandcamp kaufen</a><a class="btn" href="#musik" data-go="musik">Alle Alben</a></div>
+
+    <h2 class="sec">Videos</h2>
+    <div class="vids">
+      <a class="vid" href="https://www.youtube.com/watch?v=LIzvZ-xCKmI" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>I, Remember</b><span>Offizielles Musikvideo · 2025</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=VNDXzV_X9cU" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Deprive of Vision</b><span>Full Album Stream · YouTube</span></div></a>
+    </div>
+
+    <h2 class="sec">Folgen</h2>
+    <div class="linklist">
+      <a href="https://thygnosis.com" target="_blank" rel="noopener">Homepage <small>thygnosis.com</small></a>
+      <a href="https://www.facebook.com/ThyGnosisBand" target="_blank" rel="noopener">Facebook <small>ThyGnosisBand</small></a>
+      <a href="https://www.instagram.com/thy_gnosis" target="_blank" rel="noopener">Instagram <small>@thy_gnosis</small></a>
+      <a href="https://www.youtube.com/@Thy_Gnosis" target="_blank" rel="noopener">YouTube <small>@Thy_Gnosis</small></a>
+      <a href="https://open.spotify.com/artist/2KGG7Fpn58htq3SCM36rQ1" target="_blank" rel="noopener">Spotify <small>Artist</small></a>
+      <a href="https://thygnosis.bandcamp.com" target="_blank" rel="noopener">Bandcamp <small>Kaufen &amp; hören</small></a>
+    </div>
+  </div>
+</section>
+
+<!-- KONZERTE -->
+<section class="view" id="v-konzerte">
+  <div class="wrap">
+    <h2 class="sec">Konzerte</h2>
+    <p class="eyebrow">Kommend</p>
+    <div id="upcoming"></div>
+    <div class="stamp" id="stamp-upcoming"></div>
+    <p class="note" style="margin-top:12px">Booking: <a href="mailto:info@thygnosis.com">info@thygnosis.com</a> · Alle Termine auch auf <a href="https://www.bandsintown.com/a/15508708-thy-gnosis" target="_blank" rel="noopener">Bandsintown</a> und <a href="https://thygnosis.com/concerts" target="_blank" rel="noopener">thygnosis.com</a>.</p>
+
+    <div class="rule"></div>
+    <p class="eyebrow">Vergangene Konzerte</p>
+    <div id="past"></div>
+  </div>
+</section>
+
+<!-- MUSIK -->
+<section class="view" id="v-musik">
+  <div class="wrap">
+    <h2 class="sec">Musik</h2>
+    <p class="note">Reinhören direkt in der App über den Bandcamp-Player. Bandcamp erlaubt pro Song ein paar Gratis-Durchläufe, danach gehört das Album gekauft.</p>
+
+    <div class="album">
+      <button class="zoom" data-src="img/cover-dov.jpg" data-cap="Deprive of Vision (2026)"><img src="img/cover-dov.jpg" alt="Cover Deprive of Vision"></button>
+      <div>
+        <h3>Deprive of Vision</h3>
+        <div class="meta">Album · 13. Februar 2026 · 10 Tracks · 57:55</div>
+        <div class="player" data-album="3865331985" data-title="Deprive of Vision"><div class="ph"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>Player wird geladen</div></div>
+        <ol class="tracks two">
+          <li><span>1</span><span>Blazing Radiance</span><span>4:57</span></li>
+          <li><span>2</span><span>Unconquerable</span><span>7:39</span></li>
+          <li><span>3</span><span>Obscured \ Astray</span><span>6:45</span></li>
+          <li><span>4</span><span>In Telis Absorptus</span><span>6:25</span></li>
+          <li><span>5</span><span>Inhale the Sun</span><span>7:32</span></li>
+          <li><span>6</span><span>A Restraint in Waters of Uncertainty</span><span>5:17</span></li>
+          <li><span>7</span><span>Echoes of a Fading Thought</span><span>1:22</span></li>
+          <li><span>8</span><span>Deceased in Mist</span><span>5:50</span></li>
+          <li><span>9</span><span>First Contact</span><span>4:52</span></li>
+          <li><span>10</span><span>I, Remember</span><span>7:16</span></li>
+        </ol>
+        <p class="note">Mix &amp; Mastering: Hannes Grossmann, Mordor Sounds Studio. Self-released. Auch als Kassette und Album-Shirt im Shop.</p>
+        <div class="stream">
+          <a class="chip rel" href="https://thygnosis.bandcamp.com/album/deprive-of-vision" target="_blank" rel="noopener">Bandcamp · CHF/EUR 9</a>
+          <a class="chip" href="https://open.spotify.com/intl-de/album/3fKDxZTsXITX0iHWgIIb5e" target="_blank" rel="noopener">Spotify</a>
+          <a class="chip" href="https://music.apple.com/ch/album/deprive-of-vision/1805580531" target="_blank" rel="noopener">Apple Music</a>
+          <a class="chip" href="https://tidal.com/album/427276493" target="_blank" rel="noopener">Tidal</a>
+          <a class="chip" href="https://www.deezer.com/de/album/735488041" target="_blank" rel="noopener">Deezer</a>
+          <a class="chip" href="https://www.youtube.com/watch?v=VNDXzV_X9cU" target="_blank" rel="noopener">YouTube</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="album">
+      <button class="zoom" data-src="img/cover-br.jpg" data-cap="Blazing Radiance (2025)"><img src="img/cover-br.jpg" alt="Cover Blazing Radiance"></button>
+      <div>
+        <h3>Blazing Radiance</h3>
+        <div class="meta">Singles / EP · 21. November 2025 · 4 Tracks</div>
+        <div class="player" data-album="216552479" data-title="Blazing Radiance"><div class="ph"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>Player wird geladen</div></div>
+        <ol class="tracks">
+          <li><span>1</span><span>Blazing Radiance</span><span>4:57</span></li>
+          <li><span>2</span><span>Inhale the Sun</span><span>7:32</span></li>
+          <li><span>3</span><span>In Telis Absorptus</span><span>6:25</span></li>
+          <li><span>4</span><span>I, Remember</span><span>7:16</span></li>
+        </ol>
+        <p class="note">Die vier Vorab-Singles zum zweiten Album, im Herbst 2025 einzeln veröffentlicht und auf Bandcamp als Bundle gesammelt.</p>
+        <div class="stream">
+          <a class="chip rel" href="https://thygnosis.bandcamp.com/album/blazing-radiance" target="_blank" rel="noopener">Bandcamp</a>
+          <a class="chip" href="https://open.spotify.com/artist/2KGG7Fpn58htq3SCM36rQ1" target="_blank" rel="noopener">Spotify</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="album">
+      <button class="zoom" data-src="img/cover-sero.jpg" data-cap="Seroconversion (2023)"><img src="img/cover-sero.jpg" alt="Cover Seroconversion"></button>
+      <div>
+        <h3>Seroconversion</h3>
+        <div class="meta">Debütalbum · 25. Februar 2023 · 8 Tracks · 46:41</div>
+        <div class="player" data-album="2810298999" data-title="Seroconversion"><div class="ph"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>Player wird geladen</div></div>
+        <ol class="tracks two">
+          <li><span>1</span><span>Nagana</span><span>6:47</span></li>
+          <li><span>2</span><span>Eternal Cell Cycles</span><span>1:59</span></li>
+          <li><span>3</span><span>HeLa</span><span>5:30</span></li>
+          <li><span>4</span><span>Watching You Fade</span><span>8:31</span></li>
+          <li><span>5</span><span>Tongue Eater</span><span>6:25</span></li>
+          <li><span>6</span><span>Ghost Net</span><span>1:58</span></li>
+          <li><span>7</span><span>Yrr</span><span>7:51</span></li>
+          <li><span>8</span><span>Morbid Crown</span><span>7:40</span></li>
+        </ol>
+        <p class="note">Plattentaufe am 25.02.2023 im Malibu Bern mit Anachronism und Vorax. Als CD im Shop erhältlich.</p>
+        <div class="stream">
+          <a class="chip rel" href="https://thygnosis.bandcamp.com/album/seroconversion" target="_blank" rel="noopener">Bandcamp</a>
+          <a class="chip" href="https://open.spotify.com/intl-de/album/3kgCn06Rmdagd4UgUCLCkz" target="_blank" rel="noopener">Spotify</a>
+          <a class="chip" href="https://music.apple.com/ch/album/seroconversion/1661685537" target="_blank" rel="noopener">Apple Music</a>
+          <a class="chip" href="https://tidal.com/album/268759522" target="_blank" rel="noopener">Tidal</a>
+          <a class="chip" href="https://dzr.page.link/eJXEHskTNrzqku3U7" target="_blank" rel="noopener">Deezer</a>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="sec">Videos</h2>
+    <div class="vids">
+      <a class="vid" href="https://www.youtube.com/watch?v=LIzvZ-xCKmI" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>I, Remember</b><span>Musikvideo · 2025</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=23mBjNtKEU0" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Blazing Radiance</b><span>Guitar Playthrough · 2025</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=ycMmMtwWxZQ" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Inhale the Sun</b><span>Guitar / Bass Playthrough · 2025</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=seCAGpyuVeU" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>In Telis Absorptus</b><span>Drum Playthrough · 2025</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=VNDXzV_X9cU" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Deprive of Vision</b><span>Full Album · 2026</span></div></a>
+      <a class="vid" href="https://www.youtube.com/channel/UC5bz5V3cudaOG3T_HM08c3g" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Alle Videos</b><span>YouTube-Kanal</span></div></a>
+    </div>
+
+    <h2 class="sec">Streaming &amp; Kaufen</h2>
+    <div class="linklist">
+      <a href="https://thygnosis.bandcamp.com" target="_blank" rel="noopener">Bandcamp <small>Digital · CD · Tape</small></a>
+      <a href="https://open.spotify.com/artist/2KGG7Fpn58htq3SCM36rQ1" target="_blank" rel="noopener">Spotify <small>Artist</small></a>
+      <a href="https://music.apple.com/ch/artist/thy-gnosis/1661657823" target="_blank" rel="noopener">Apple Music <small>Artist</small></a>
+      <a href="https://www.deezer.com/en/artist/195029907" target="_blank" rel="noopener">Deezer <small>Artist</small></a>
+      <a href="https://soundcloud.com/thygnosis" target="_blank" rel="noopener">SoundCloud <small>thygnosis</small></a>
+      <a href="https://mx3.ch/thygnosis" target="_blank" rel="noopener">Mx3.ch <small>SRG-Musikplattform</small></a>
+    </div>
+  </div>
+</section>
+
+<!-- BAND -->
+<section class="view" id="v-band">
+  <div class="wrap">
+    <h2 class="sec">Band</h2>
+    <figure style="margin:0">
+      <button class="zoom" data-src="img/band.jpg" data-cap="Thy Gnosis, v.l.n.r.: Dr. Grü, S.U., Markus, Aurel, Jan"><img class="band-photo" src="img/band.jpg" alt="Bandfoto Thy Gnosis vor einer Steinmauer"></button>
+      <figcaption>Von links nach rechts: Dr. Grü, S.U., Markus, Aurel, Jan. Pressefoto von thygnosis.com.</figcaption>
+    </figure>
+
+    <p class="eyebrow" style="margin-top:22px">Besetzung</p>
+    <div class="members">
+      <div><b>Markus Gerber</b><span>Vocals</span><i>auch: Frank Needs Help</i></div>
+      <div><b>Jan Beedy</b><span>Gitarre</span><i>ex-Omnicide</i></div>
+      <div><b>Christian «Dr. Grü»</b><span>Gitarre</span><i>ex-Irony of Fate, ex-Fate Control</i></div>
+      <div><b>Aurel Bodone</b><span>Bass · seit 2023</span><i>Nachfolger von Jo (Apokryphon, ex-Darkspace)</i></div>
+      <div><b>Stefan U.</b><span>Drums</span><i>auch: Sulphur Sun; ex-Diagnosis: Human, ex-Omnicide</i></div>
+    </div>
+    <p class="note" style="margin-top:8px">Quellen: Metal Archives, Metal Factory, thygnosis.com.</p>
+
+    <h2 class="sec">Biografie</h2>
+    <p>Thy Gnosis gründeten sich 2022 in Bern. Das erste belegbare Konzert unter diesem Namen war der Headbangersball-Silvester im Graffiti Bern am 31.12.2022. Zwei Monate später folgte mit <em>Seroconversion</em> das Debütalbum, getauft im Malibu Bern.</p>
+    <p>2023 spielte die Band unter anderem am Slamcult Vol. V im Akut Thun, als Support für Be'lakor im ausverkauften Exil Zürich und am Ruination Metal Fest in Burgdorf. 2024 und 2025 folgten Shows in Bern, Biel und Genf, darunter «Prog Death Over Bern» im Malibu.</p>
+    <p>Im Herbst 2025 erschienen vier Singles, am 13. Februar 2026 das zweite Album <em>Deprive of Vision</em>, das die Band an der «Night of Death II» zusammen mit Hour of Penance und Defaced live taufte. Bandsintown beschreibt die Band als harten, fordernden Progressive Death Metal mit schnellen, schönen Riffs und einer eigenwilligen Bühnenpräsenz.</p>
+
+    <h2 class="sec">Kritiken</h2>
+    <div class="scores">
+      <div class="score"><b>8.3<small>/10</small></b><span>Metal Factory</span></div>
+      <div class="score"><b>86<small>%</small></b><span>Metal Archives</span></div>
+      <div class="score"><b>9.0<small>/10</small></b><span>Metal na Lata</span></div>
+    </div>
+    <div class="quote"><p>«Keiner der Tracks klingt identisch, keiner wird mit demselben Grundbeat durchgezogen. Jeder Song vermittelt eine ganz eigene Stimmung und Atmosphäre.»</p><cite>Oliver H., <a href="https://metalfactory.ch/music-reviews/aktuell/review/thy-gnosis-deprive-of-vision" target="_blank" rel="noopener">Metal Factory</a>, zu Deprive of Vision</cite></div>
+    <div class="quote"><p>«Thy Gnosis sind definitiv eine Truppe, die man sich merken muss.»</p><cite>Metal Factory</cite></div>
+    <div class="quote"><p>«Australischer Melodic Death meets Schweizer Progressive Death im EXIL bei gefühlt 40° und vollem Haus.»</p><cite><a href="https://plekvetica.ch/event-details/belakor/" target="_blank" rel="noopener">Plekvetica</a>, Be'lakor-Show, 19.08.2023</cite></div>
+
+    <h2 class="sec">Kontakt &amp; Presse</h2>
+    <div class="linklist">
+      <a href="mailto:info@thygnosis.com">E-Mail <small>info@thygnosis.com</small></a>
+      <a href="https://thygnosis.com/data/files/epk_thy_gnosis.pdf" target="_blank" rel="noopener">EPK <small>PDF</small></a>
+      <a href="https://thygnosis.com/data/files/thygnosis_bandbio_depdf.pdf" target="_blank" rel="noopener">Bio (DE) <small>PDF</small></a>
+      <a href="https://thygnosis.com/data/files/photos/thygnosis_tech_rider.pdf" target="_blank" rel="noopener">Tech Rider <small>PDF</small></a>
+      <a href="https://thygnosis.com/data/files/thy_gnosis_logos.zip" target="_blank" rel="noopener">Logos <small>ZIP</small></a>
+      <a href="https://thygnosis.com/data/files/thy_gnosis_photos.zip" target="_blank" rel="noopener">Pressefotos <small>ZIP</small></a>
+    </div>
+
+    <h2 class="sec">Alle Links</h2>
+    <div class="linklist" id="alllinks"></div>
+  </div>
+</section>
+
+<!-- GALERIE -->
+<section class="view" id="v-galerie">
+  <div class="wrap">
+    <h2 class="sec">Galerie</h2>
+    <p class="eyebrow">Bandfotos &amp; Artwork</p>
+    <div class="grid wide" id="photos"></div>
+    <p class="eyebrow" style="margin-top:24px">Flyer</p>
+    <div class="grid" id="flyers"></div>
+    <p class="eyebrow" style="margin-top:24px">Livefotos (extern)</p>
+    <div class="linklist">
+      <a href="https://plekvetica.ch/konzertfotos/maf/galleries/thy-gnosis-kulturhalle-saegegasse-burgdorf-13-02-2026/band/3718" target="_blank" rel="noopener">Night of Death II, Burgdorf <small>13.02.2026</small></a>
+      <a href="https://plekvetica.ch/konzertfotos/maf/galleries/thy-gnosis-kulturhalle-saegegasse-burgdorf-16-12-2023/band/3718" target="_blank" rel="noopener">Ruination Metal Fest, Burgdorf <small>16.12.2023</small></a>
+      <a href="https://plekvetica.ch/konzertfotos/maf/galleries/thy-gnosis-exil-zuerich-19-08-2023/band/3718" target="_blank" rel="noopener">Be'lakor-Support, Exil Zürich <small>19.08.2023</small></a>
+      <a href="https://www.instagram.com/thy_gnosis" target="_blank" rel="noopener">Instagram <small>Aktuelle Fotos</small></a>
+    </div>
+  </div>
+</section>
+
+<!-- SHOP -->
+<section class="view" id="v-shop">
+  <div class="wrap">
+    <h2 class="sec">Shop</h2>
+    <p class="note">Preise gemäss thygnosis.com/shop. Bestellung direkt im offiziellen Shop.</p>
+    <div class="shop" id="shop"></div>
+    <div class="btns" style="margin-top:16px">
+      <a class="btn primary" href="https://thygnosis.com/shop" target="_blank" rel="noopener">Zum Shop</a>
+      <a class="btn" href="https://thygnosis.bandcamp.com" target="_blank" rel="noopener">Bandcamp</a>
+    </div>
+  </div>
+</section>
+
+<footer>Inoffizielle Fan-App · Daten von thygnosis.com, Bandcamp, Bandsintown, Plekvetica, Metal Archives, Metal Factory · Alle Bilder © Thy Gnosis</footer>
+</main>
+</div>
+</div>
+
+<div class="lb" id="lb" role="dialog" aria-label="Bild"><button class="x" aria-label="Schliessen">×</button><img alt=""><div class="cap"></div></div>
+
+<script>
+/* ---------- bundled data (fallback when offline) ---------- */
+const FEED_URL = 'https://raw.githubusercontent.com/sebastianbuergy-oss/thy-gnosis-ios/main/feed/feed.json';
+const BIT_URL = 'https://rest.bandsintown.com/artists/id_15508708/events?app_id=js_thygnosis.com&date=upcoming';
+const MONTHS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const WEEKDAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+const bundled = {
+  updated: '2026-09-12',
+  upcoming: [
+    {date:'2026-09-27',time:'19:00',title:'Support für Baest (DK)',venue:'Kiff',city:'Aarau',lineup:'Baest, Deadnate, Thy Gnosis',note:'Thy Gnosis eröffnet für die dänische Death-Metal-Band Baest auf ihrer «Colossal»-Tour.',tickets:'https://www.seetickets.com/ch/event/baest-dk-/kiff-foyer/3625845',url:'https://www.bandsintown.com/e/108721934',preview:'https://www.metalinside.ch/2026/09/baest-kiff-aarau-2026-preview/'}
+  ],
+  news: [
+    {date:'2026-09-27',source:'Bandsintown',title:'Live im Kiff Aarau mit Baest',text:'Thy Gnosis spielt am Sonntag, 27. September 2026 als Support für Baest (DK) und Deadnate im Kiff Aarau. Türöffnung 19:00.',url:'https://www.bandsintown.com/e/108721934'},
+    {date:'2026-04-03',source:'Metal Factory',title:'Review: 8.3 von 10 für «Deprive of Vision»',text:'«Thy Gnosis sind definitiv eine Truppe, die man sich merken muss.» Oliver H. lobt, dass keiner der zehn Tracks gleich klingt.',url:'https://metalfactory.ch/music-reviews/aktuell/review/thy-gnosis-deprive-of-vision'},
+    {date:'2026-02-13',source:'Bandcamp',title:'Album «Deprive of Vision» ist draussen',text:'Zweites Album, zehn Tracks, gemischt und gemastert von Hannes Grossmann. Plattentaufe an der Night of Death II in Burgdorf.',url:'https://thygnosis.bandcamp.com/album/deprive-of-vision'},
+    {date:'2025-11-21',source:'Bandcamp',title:'Vier Singles als «Blazing Radiance»',text:'Blazing Radiance, Inhale the Sun, In Telis Absorptus und I, Remember gesammelt auf Bandcamp, dazu Playthrough-Videos.',url:'https://thygnosis.bandcamp.com/album/blazing-radiance'}
+  ]
+};
+
+const past = [
+  {d:'13',m:'Feb',y:'2026',t:'Night of Death II',v:'Kulturhalle Sägegasse, Burgdorf',w:'Hour of Penance (IT), Thy Gnosis, Defaced, Shallow Dissent',n:'Plattentaufe «Deprive of Vision». 25 CHF VVK / 30 CHF AK.',rel:true,fl:['flyer-2026-02-13.jpg'],links:[['Plekvetica-Review','https://plekvetica.ch/event-details/night-of-death-ii/'],['Fotos','https://plekvetica.ch/konzertfotos/maf/galleries/thy-gnosis-kulturhalle-saegegasse-burgdorf-13-02-2026/band/3718']]},
+  {d:'10',m:'Okt',y:'2025',t:"Kess'khtak Release Party",v:"L'Ecurie, Genf",w:"Kess'khtak, Khatovar, Thy Gnosis",n:'Doors 20:00, Bands 21:00, 10 CHF.',fl:['flyer-2025-10-10.jpg'],links:[['Plekvetica','https://plekvetica.ch/event-details/kesskhtak-thy-gnosis-khatovar/']]},
+  {d:'29',m:'Mär',y:'2025',t:'Prog Death Over Bern',v:'Malibu, Bern',w:'Beyond Dystopia, Kerberos, Thy Gnosis',n:'20 CHF.',links:[['Plekvetica','https://plekvetica.ch/event-details/beyond-dystopia-kerberos-thy-gnosis/'],['metalgigs.ch','https://metalgigs.ch/konzerte/10291/thy-gnosis-malibu-bern-29-03-2025']]},
+  {d:'29',m:'Nov',y:'2024',t:'A Night of Vicious Death Metal',v:'Bar 48, Biel',w:'Vorax, Thy Gnosis, Pale Black',n:'Thy Gnosis um 21:15. 15 CHF.',links:[['Plekvetica','https://plekvetica.ch/event-details/vorax-thy-gnosis-pale-black/']]},
+  {d:'21',m:'Mär',y:'2024',t:'Headbangersball',v:'Mahogany Hall, Bern',w:"Extermination Dismemberment (BLR), Kess'khtak, Thy Gnosis",n:'Dehumanization Protocol European Tour 2024. 20:00, 25 CHF.',fl:['flyer-2024-03-21.jpg'],links:[]},
+  {d:'16',m:'Dez',y:'2023',t:'Ruination Metal Fest',v:'Kulturhalle Sägegasse, Burgdorf',w:'Among Vultures, Whiteout, Days of Ruin, Nice To Eat You, The Kate Effect, Thy Gnosis, JOR, Flo LeBeau',n:'Doors 15:30. 27 CHF VVK / 30 CHF AK.',fl:['flyer-2023-12-16.jpg'],links:[['Plekvetica-Review','https://plekvetica.ch/event-details/ruination-metal-fest/'],['Fotos','https://plekvetica.ch/konzertfotos/maf/galleries/thy-gnosis-kulturhalle-saegegasse-burgdorf-16-12-2023/band/3718']]},
+  {d:'04',m:'Nov',y:'2023',t:'Death Metal Night',v:'Malibu, Bern',w:'Thy Gnosis, Mnemocide, All Life Ends',n:'15 CHF.',links:[['Plekvetica','https://plekvetica.ch/event-details/thy-gnosis-mnemocide-all-life-ends/']]},
+  {d:'19',m:'Aug',y:'2023',t:"Support für Be'lakor (AUS)",v:'Exil, Zürich',w:"Be'lakor, Thy Gnosis",n:'European Tour 2023. Ausverkauft.',fl:['flyer-2023-08-19.jpg'],links:[['Plekvetica-Review','https://plekvetica.ch/event-details/belakor/'],['Fotos','https://plekvetica.ch/konzertfotos/maf/galleries/thy-gnosis-exil-zuerich-19-08-2023/band/3718']]},
+  {d:'22',m:'Apr',y:'2023',t:'Slamcult Vol. V',v:'Akut, Thun',w:'Devour the Fetus (FR), Consumed by Vultures, Thy Gnosis',n:'Doors 19:00, Show 20:00. Kollekte.',fl:['flyer-2023-04-22.jpg'],links:[]},
+  {d:'25',m:'Feb',y:'2023',t:'Release Party «Seroconversion»',v:'Malibu, Bern',w:'Thy Gnosis, Vorax, Anachronism',n:'Doors 20:00, Bands 21:00, 15 CHF.',rel:true,fl:['flyer-2023-02-25.jpg'],links:[['Plekvetica','https://plekvetica.ch/event-details/plattentaufe-thy-gnosis-mit-anachronism-vorax/']]},
+  {d:'31',m:'Dez',y:'2022',t:'Headbangersball Silvester',v:'Graffiti, Bern',w:'Thulsa Doom (IT), The Artifice, Thy Gnosis, Screams of Suffering, Miscreance (IT), Calarook',n:'Ab 18:00. 25 / 35 CHF.',fl:['flyer-2022-12-31.jpg'],links:[['Plekvetica','https://plekvetica.ch/event-details/headbangersball-silvester/']]}
+];
+const flyerCaps = {
+  'flyer-2026-02-13.jpg':'Night of Death II · Burgdorf · 13.02.2026',
+  'flyer-2025-10-10.jpg':"Kess'khtak Release Party · Genf · 10.10.2025",
+  'flyer-2024-03-21.jpg':'Headbangersball · Mahogany Hall Bern · 21.03.2024',
+  'flyer-2023-12-16.jpg':'Ruination Metal Fest · Burgdorf · 16.12.2023',
+  'flyer-2023-08-19.jpg':"Be'lakor Support · Exil Zürich · 19.08.2023",
+  'flyer-2023-04-22.jpg':'Slamcult Vol. V · Akut Thun · 22.04.2023',
+  'flyer-2023-02-25.jpg':'Release Party Seroconversion · Malibu Bern · 25.02.2023',
+  'flyer-2022-12-31.jpg':'Headbangersball Silvester · Graffiti Bern · 31.12.2022'
+};
+const photos = [
+  ['band.jpg','Pressefoto (thygnosis.com)'],
+  ['band2.jpg','Bandfoto (Bandcamp)'],
+  ['band3.jpg','Bandfoto (Metal Archives)'],
+  ['logo.png','Logo'],
+  ['cover-dov.jpg','Cover «Deprive of Vision»'],
+  ['cover-sero.jpg','Cover «Seroconversion»']
+];
+const shop = [
+  ['shop-shirt-dov.jpg','Album Shirt «Deprive of Vision»','25.00'],
+  ['shop-tape.jpg','Kassette «Deprive of Vision»','15.00'],
+  ['shop-cd.png','CD «Seroconversion»','20.00'],
+  ['shop-cap.jpg','Dad-Hat mit gesticktem Logo','15.00'],
+  ['shop-shirt-grey.jpg','T-Shirt Acid-Washed Grey Logo','20.00'],
+  ['shop-shirt-w.jpg','Womens Black Shirt','30.00'],
+  ['shop-shirt-m.jpg','Mens Black Shirt','30.00'],
+  ['shop-patch.jpg','Patch Logo (Moonroot Art)','9.00']
+];
+const links = [
+  ['Homepage','thygnosis.com','https://thygnosis.com'],
+  ['Facebook','ThyGnosisBand','https://www.facebook.com/ThyGnosisBand'],
+  ['Instagram','@thy_gnosis','https://www.instagram.com/thy_gnosis'],
+  ['X / Twitter','@Thy_Gnosis','https://twitter.com/Thy_Gnosis'],
+  ['YouTube','Kanal','https://www.youtube.com/channel/UC5bz5V3cudaOG3T_HM08c3g'],
+  ['Bandcamp','thygnosis.bandcamp.com','https://thygnosis.bandcamp.com'],
+  ['Spotify','Artist','https://open.spotify.com/artist/2KGG7Fpn58htq3SCM36rQ1'],
+  ['Apple Music','Artist','https://music.apple.com/ch/artist/thy-gnosis/1661657823'],
+  ['Deezer','Artist','https://www.deezer.com/en/artist/195029907'],
+  ['SoundCloud','thygnosis','https://soundcloud.com/thygnosis'],
+  ['Bandsintown','Konzerte folgen','https://www.bandsintown.com/a/15508708-thy-gnosis'],
+  ['Metal Archives','Encyclopaedia Metallum','https://www.metal-archives.com/bands/Thy_Gnosis/3540521012'],
+  ['Plekvetica','Events & Fotos','https://plekvetica.ch/band/ch_thy-gnosis/'],
+  ['metalgigs.ch','Bandprofil','https://metalgigs.ch/bands/8173/thy-gnosis'],
+  ['Mx3.ch','Bandprofil','https://mx3.ch/thygnosis'],
+  ['Concert Archives','Tour History','https://www.concertarchives.org/bands/thy-gnosis'],
+  ['Shop','thygnosis.com/shop','https://thygnosis.com/shop'],
+  ['E-Mail','info@thygnosis.com','mailto:info@thygnosis.com']
+];
+const esc = s => String(s ?? '').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const safeUrl = u => /^(https?:|mailto:)/.test(String(u||'')) ? String(u) : '';
+
+/* ---------- static sections ---------- */
+document.getElementById('past').innerHTML = past.map(g=>`
+  <div class="gig">
+    <div class="d"><b>${g.d}</b><span>${g.m}</span><i>${g.y}</i></div>
+    <div>
+      <h3>${esc(g.t)}</h3>
+      <div class="v">${esc(g.v)}</div>
+      <div class="with"><span>mit</span> ${esc(g.w)}${g.n?` <span>· ${esc(g.n)}</span>`:''}</div>
+      <div class="tags">${g.rel?'<span class="chip rel">Plattentaufe</span>':''}${g.links.map(l=>`<a class="chip" href="${l[1]}" target="_blank" rel="noopener">${esc(l[0])}</a>`).join('')}</div>
+    </div>
+    ${g.fl?`<div class="fl">${g.fl.map(f=>`<img src="img/${f}" alt="Flyer" data-cap="${esc(flyerCaps[f]||'')}" class="zoomimg">`).join('')}</div>`:''}
+  </div>`).join('');
+document.getElementById('flyers').innerHTML = Object.entries(flyerCaps).map(([f,c])=>`<button class="zoom" data-src="img/${f}" data-cap="${esc(c)}"><figure><img src="img/${f}" alt="${esc(c)}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure></button>`).join('');
+document.getElementById('photos').innerHTML = photos.map(([f,c])=>`<button class="zoom" data-src="img/${f}" data-cap="${esc(c)}"><figure><img src="img/${f}" alt="${esc(c)}" loading="lazy" style="${f.endsWith('.png')?'object-fit:contain;background:#000;padding:12px':''}"><figcaption>${esc(c)}</figcaption></figure></button>`).join('');
+document.getElementById('shop').innerHTML = shop.map(([f,n,p])=>`<a class="item" href="https://thygnosis.com/shop" target="_blank" rel="noopener"><img src="img/${f}" alt="${esc(n)}" loading="lazy"><div class="t"><b>${esc(n)}</b><div class="p">CHF ${p}</div></div></a>`).join('');
+document.getElementById('alllinks').innerHTML = links.map(l=>`<a href="${l[2]}" target="_blank" rel="noopener">${esc(l[0])} <small>${esc(l[1])}</small></a>`).join('');
+
+/* ---------- live data: upcoming shows + news ---------- */
+let countdownTimer = null;
+function parseDate(g){ return new Date(`${g.date}T${g.time||'20:00'}:00+02:00`); }
+function dateParts(iso){ const d=new Date(iso+'T12:00:00'); return {d:String(d.getDate()).padStart(2,'0'), m:MONTHS[d.getMonth()], y:String(d.getFullYear()), w:WEEKDAYS[d.getDay()]}; }
+function fmtStamp(iso){ const p=dateParts(iso); return `${p.d}.${String(new Date(iso+'T12:00:00').getMonth()+1).padStart(2,'0')}.${p.y}`; }
+
+function renderUpcoming(list, meta){
+  const box = document.getElementById('upcoming');
+  const now = Date.now();
+  const gigs = (list||[]).filter(g=>g.date && parseDate(g).getTime() > now - 6*36e5).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!gigs.length){
+    box.innerHTML = '<div class="empty">Zurzeit sind keine Konzerte angekündigt. Sobald die Band ein Datum veröffentlicht, erscheint es hier.</div>';
+  } else {
+    box.innerHTML = gigs.map(g=>{
+      const p = dateParts(g.date);
+      const tags = [];
+      if(safeUrl(g.tickets)) tags.push(`<a class="chip rel" href="${safeUrl(g.tickets)}" target="_blank" rel="noopener">Tickets</a>`);
+      if(safeUrl(g.url)) tags.push(`<a class="chip" href="${safeUrl(g.url)}" target="_blank" rel="noopener">Details</a>`);
+      if(safeUrl(g.preview)) tags.push(`<a class="chip" href="${safeUrl(g.preview)}" target="_blank" rel="noopener">Preview</a>`);
+      return `<div class="gig">
+        <div class="d"><b>${p.d}</b><span>${p.m}</span><i>${p.y}</i></div>
+        <div>
+          <h3>${esc(g.title)}</h3>
+          <div class="v">${esc([g.venue,g.city].filter(Boolean).join(', '))}${g.time?` · ${p.w}, ${esc(g.time)}`:''}</div>
+          ${g.lineup?`<div class="with"><span>mit</span> ${esc(g.lineup)}</div>`:''}
+          ${g.note?`<div class="with"><span>${esc(g.note)}</span></div>`:''}
+          <div class="tags">${tags.join('')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  renderNext(gigs[0]||null);
+  const badge = document.getElementById('livebadge');
+  badge.textContent = gigs[0] ? `Live ${dateParts(gigs[0].date).d}.${String(new Date(gigs[0].date+'T12:00:00').getMonth()+1).padStart(2,'0')}. ${gigs[0].city||gigs[0].venue||''}`.trim() : '';
+  const stamp = document.getElementById('stamp-upcoming');
+  stamp.textContent = meta;
+  stamp.className = 'stamp' + (meta.startsWith('Live') ? ' live' : '');
+}
+
+function renderNext(g){
+  const el = document.getElementById('next');
+  if(countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
+  if(!g){
+    el.className = 'next none';
+    el.innerHTML = `<div class="body"><p class="eyebrow" style="margin-bottom:4px">Nächstes Konzert</p><h3>Noch nichts angekündigt</h3><div class="venue">Neue Daten erscheinen hier automatisch, sobald die Band sie veröffentlicht.</div><div class="btns"><a class="btn" href="https://www.bandsintown.com/a/15508708-thy-gnosis" target="_blank" rel="noopener">Bandsintown folgen</a></div></div>`;
+    return;
+  }
+  const p = dateParts(g.date);
+  const btns = [];
+  if(safeUrl(g.tickets)) btns.push(`<a class="btn primary" href="${safeUrl(g.tickets)}" target="_blank" rel="noopener">Tickets</a>`);
+  if(safeUrl(g.url)) btns.push(`<a class="btn" href="${safeUrl(g.url)}" target="_blank" rel="noopener">Details</a>`);
+  btns.push(`<a class="btn" href="#konzerte" data-go="konzerte">Alle Konzerte</a>`);
+  el.className = 'next';
+  el.innerHTML = `
+    <div class="date"><span class="d">${p.d}</span><span class="m">${p.m}</span><span class="w">${p.w}${g.time?` · ${esc(g.time)}`:''}</span></div>
+    <div class="body">
+      <p class="eyebrow" style="margin-bottom:4px">Nächstes Konzert</p>
+      <h3>${esc(g.title)}</h3>
+      <div class="venue">${esc([g.venue,g.city].filter(Boolean).join(', '))}${g.lineup?` · mit ${esc(g.lineup)}`:''}</div>
+      <div class="count" id="count" aria-label="Countdown"></div>
+      <div class="btns">${btns.join('')}</div>
+    </div>`;
+  const target = parseDate(g).getTime();
+  const cEl = document.getElementById('count');
+  const tick = () => {
+    const ms = target - Date.now();
+    if(ms <= 0){ cEl.innerHTML = '<div><b>Heute</b><span>Live</span></div>'; return; }
+    const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4);
+    cEl.innerHTML = `<div><b>${d}</b><span>Tage</span></div><div><b>${h}</b><span>Std</span></div><div><b>${m}</b><span>Min</span></div>`;
+  };
+  tick(); countdownTimer = setInterval(tick, 30000);
+}
+
+function renderNews(list, meta){
+  const box = document.getElementById('news');
+  const items = (list||[]).slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,8);
+  box.innerHTML = items.map(n=>{
+    const p = dateParts(n.date);
+    const href = safeUrl(n.url);
+    const tag = href ? 'a' : 'div';
+    return `<${tag} class="item-news" ${href?`href="${href}" target="_blank" rel="noopener"`:''}>
+      <div class="d"><b>${p.d}</b><span>${p.m}</span><i>${p.y}</i></div>
+      <div><h3>${esc(n.title)}</h3>${n.text?`<p>${esc(n.text)}</p>`:''}${n.source?`<div class="src">${esc(n.source)}</div>`:''}</div>
+    </${tag}>`;
+  }).join('') || '<div class="empty">Noch keine Neuigkeiten.</div>';
+  const stamp = document.getElementById('stamp-news');
+  stamp.textContent = meta;
+  stamp.className = 'stamp' + (meta.startsWith('Live') ? ' live' : '');
+}
+
+function bitToGig(e){
+  const dt = String(e.datetime||'');
+  const v = e.venue||{};
+  const lineup = (e.lineup||[]).filter(Boolean).join(', ');
+  const offer = (e.offers||[]).find(o=>o.type==='Tickets' && o.url);
+  return {
+    date: dt.slice(0,10), time: dt.slice(11,16),
+    title: String(e.title||'').trim() || (lineup ? lineup : 'Thy Gnosis live'),
+    venue: v.name||'', city: [v.city, v.country && v.country!=='Switzerland' ? v.country : ''].filter(Boolean).join(', '),
+    lineup, note: '', tickets: offer ? offer.url : '', url: e.url||''
+  };
+}
+
+async function loadFeed(){
+  const cached = (()=>{ try{ return JSON.parse(localStorage.getItem('tg-feed')||'null'); }catch(e){ return null; } })();
+  let feed = cached || bundled, feedMeta = cached ? `Stand ${fmtStamp(cached.updated||bundled.updated)}` : `Stand ${fmtStamp(bundled.updated)} (gebündelt)`;
+  let upcoming = feed.upcoming, upMeta = feedMeta;
+  renderUpcoming(upcoming, upMeta); renderNews(feed.news, feedMeta);
+
+  const jobs = [];
+  jobs.push(fetch(FEED_URL + '?t=' + Date.now(), {cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{
+    if(j && Array.isArray(j.upcoming) && Array.isArray(j.news)){
+      feed = j; try{ localStorage.setItem('tg-feed', JSON.stringify(j)); }catch(e){}
+      feedMeta = `Live · Feed vom ${fmtStamp(j.updated||bundled.updated)}`;
+      if(j.message) feedMeta += ' · ' + j.message;
+      renderNews(j.news, feedMeta);
+      upcoming = j.upcoming; upMeta = feedMeta;
+      renderUpcoming(upcoming, upMeta);
+    }
+  }).catch(()=>{}));
+  jobs.push(fetch(BIT_URL, {cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(events=>{
+    if(!Array.isArray(events)) return;
+    const live = events.map(bitToGig).filter(g=>g.date);
+    // Bandsintown is the band's own calendar: it wins over the feed for dates,
+    // but feed entries add tickets/notes for the same day.
+    const merged = live.map(g=>{ const f=(feed.upcoming||[]).find(x=>x.date===g.date); return f ? {...g, ...Object.fromEntries(Object.entries(f).filter(([k,v])=>v))} : g; });
+    for(const f of feed.upcoming||[]) if(!merged.find(g=>g.date===f.date)) merged.push(f);
+    renderUpcoming(merged, 'Live · Bandsintown ' + new Date().toLocaleDateString('de-CH'));
+  }).catch(()=>{}));
+  await Promise.allSettled(jobs);
+}
+loadFeed();
+window.addEventListener('app-active', ()=>loadFeed());
+
+/* ---------- Bandcamp players (loaded once a view with players is shown) ---------- */
+function loadPlayers(scope){
+  scope.querySelectorAll('.player:not(.loaded)').forEach(p=>{
+    const f = document.createElement('iframe');
+    f.src = `https://bandcamp.com/EmbeddedPlayer/album=${p.dataset.album}/size=large/bgcol=16161a/linkcol=e7e2d8/tracklist=false/artwork=none/transparent=true/`;
+    f.title = `Bandcamp-Player: ${p.dataset.title}`;
+    f.setAttribute('seamless','');
+    f.setAttribute('allow','autoplay; encrypted-media');
+    f.addEventListener('load', ()=>p.classList.add('loaded'));
+    p.appendChild(f);
+  });
+}
+
+/* ---------- navigation ---------- */
+const views = [...document.querySelectorAll('.view')], navBtns=[...document.querySelectorAll('.nav button')];
+function go(v, push=true){
+  if(!document.getElementById('v-'+v)) v='start';
+  views.forEach(s=>s.classList.toggle('active', s.id==='v-'+v));
+  navBtns.forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  if(push) history.replaceState(null,'','#'+v);
+  window.scrollTo({top:0});
+  loadPlayers(document.getElementById('v-'+v));
+}
+navBtns.forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
+document.addEventListener('click',e=>{ const a=e.target.closest('[data-go]'); if(a){ e.preventDefault(); go(a.dataset.go); } });
+window.addEventListener('hashchange',()=>go(location.hash.slice(1),false));
+go(location.hash.slice(1)||'start',false);
+
+/* ---------- lightbox ---------- */
+const lb=document.getElementById('lb'), lbImg=lb.querySelector('img'), lbCap=lb.querySelector('.cap');
+function openLb(src,cap){lbImg.src=src;lbImg.alt=cap;lbCap.textContent=cap;lb.classList.add('open')}
+document.addEventListener('click',e=>{
+  const z=e.target.closest('.zoom'); if(z){openLb(z.dataset.src,z.dataset.cap||'');return}
+  const zi=e.target.closest('.zoomimg'); if(zi){openLb(zi.src,zi.dataset.cap||'');return}
+  if(e.target.closest('#lb')) lb.classList.remove('open');
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('open')});
+</script>
+</body>
+</html>
