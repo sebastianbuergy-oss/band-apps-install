@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Days of Ruin</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{
+  --bg:#000; --bg2:#0b0b0c; --surface:#131315; --surface2:#1b1b1e; --line:#2b2b30; --line2:#3d3d44;
+  --text:#fff; --muted:#9a9aa2; --dim:#6a6a72;
+  --tox:#a3ff12; --tox-d:#86d900; --on-tox:#000; --cyan:#2bb8e8; --cyan-d:#1a86ab;
+  --display:"Archivo Black","Arial Black",sans-serif;
+  --cond:"Oswald","Arial Narrow",sans-serif;
+  --body:"Roboto","Helvetica Neue",Arial,sans-serif;
+  --rail:236px; --tab:66px; --max:1060px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{color-scheme:dark;-webkit-text-size-adjust:100%;overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:rgba(163,255,18,.22);overscroll-behavior-y:none}
+a{color:inherit}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* shell */
+.shell{min-height:100vh;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:20;background:rgba(0,0,0,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-top:var(--sat)}
+.top .bar{display:flex;align-items:center;gap:14px;padding:12px 16px}
+.top .mark{height:26px;width:auto}
+.top .live{margin-left:auto;font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-tox);background:var(--tox);padding:6px 11px;text-decoration:none;white-space:nowrap;min-width:0;max-width:62%;overflow:hidden;text-overflow:ellipsis}
+.top .live:empty{display:none}
+.top .rule{height:3px;background:linear-gradient(90deg,var(--tox) 0%,var(--tox) 42%,var(--cyan) 42%,var(--cyan) 100%)}
+main{flex:1;padding:0 0 calc(var(--tab) + var(--sab) + 28px)}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 16px}
+.view{display:none}
+.view.active{display:block}
+
+/* nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;height:calc(var(--tab) + var(--sab));padding:6px 6px calc(6px + var(--sab));display:grid;grid-template-columns:repeat(6,1fr);gap:4px;background:rgba(0,0,0,.97);border-top:1px solid var(--line)}
+.nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:square;stroke-linejoin:miter}
+.nav button.on{color:var(--on-tox);background:var(--tox)}
+.nav .brand{display:none}
+@media (min-width:900px){
+  .shell{flex-direction:row}
+  .nav{position:sticky;top:0;bottom:auto;height:100vh;width:var(--rail);grid-template-columns:1fr;grid-auto-rows:min-content;align-content:start;gap:2px;border-top:0;border-right:1px solid var(--line);padding:22px 10px}
+  .nav button{flex-direction:row;justify-content:flex-start;gap:14px;padding:13px 16px;font-size:13px}
+  .nav .brand{display:block;padding:0 16px 20px}
+  .nav .brand img{width:100%;max-width:170px}
+  .content{flex:1;min-width:0}
+  main{padding-bottom:56px}
+  .top .mark{display:none}
+  .top .bar{justify-content:flex-end;min-height:52px}
+}
+
+/* type */
+h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
+h2.sec{font-family:var(--display);font-size:clamp(26px,7vw,38px);line-height:1.02;text-transform:uppercase;letter-spacing:-.01em;margin:36px 0 14px;display:flex;align-items:baseline;gap:10px}
+h2.sec::before{content:"//";color:var(--cyan);font-family:var(--cond);font-size:.6em;font-weight:700;letter-spacing:-.04em}
+.eyebrow{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin:0 0 10px}
+p{margin:0 0 14px;max-width:62ch}
+.lead{font-size:18px}
+.note{font-size:14px;color:var(--muted)}
+.stamp{font-family:var(--cond);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:12px}
+.stamp.live{color:var(--cyan)}
+strong{font-weight:700}
+
+/* hero */
+.hero{position:relative;background:#000;border-bottom:1px solid var(--line);overflow:hidden}
+.hero .bg{position:absolute;inset:0;background:url(img/live-crowd.jpg) center 30%/cover no-repeat;opacity:.42;filter:grayscale(.35) contrast(1.1)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.95))}
+.hero .in{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:34px 16px 26px}
+.hero .logo{width:min(460px,86%);margin:0 0 16px;filter:drop-shadow(0 6px 26px rgba(0,0,0,.9))}
+.hero .tag{font-family:var(--cond);font-size:13px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#fff}
+.hero .tag b{color:var(--cyan);font-weight:600}
+.hero .wack{display:inline-block;margin-top:14px;font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#000;background:var(--cyan);padding:5px 10px}
+
+/* next show */
+.next{margin:22px 0 0;background:var(--surface);border:1px solid var(--line2);border-top:4px solid var(--tox)}
+.next .body{padding:18px}
+.next .kick{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--tox);margin-bottom:10px}
+.next .day{display:flex;align-items:baseline;gap:10px;font-family:var(--display);line-height:.9}
+.next .day .d{font-size:62px}
+.next .day .m{font-size:22px;color:var(--cyan);text-transform:uppercase}
+.next .day .y{font-family:var(--cond);font-size:15px;color:var(--muted);letter-spacing:.1em}
+.next h3{font-family:var(--cond);font-size:26px;font-weight:600;line-height:1.1;text-transform:uppercase;margin-top:12px}
+.next .venue{color:var(--muted);margin:4px 0 0;font-size:15px}
+.count{display:flex;gap:8px;margin:16px 0}
+.count div{flex:0 0 auto;min-width:64px;border:1px solid var(--line2);padding:8px 10px;text-align:center;font-variant-numeric:tabular-nums}
+.count b{display:block;font-family:var(--display);font-size:26px;line-height:1}
+.count span{display:block;font-family:var(--cond);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-top:4px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-flex;align-items:center;font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;padding:11px 16px;border:1px solid var(--line2);color:#fff}
+.btn.primary{background:var(--tox);border-color:var(--tox);color:var(--on-tox)}
+.btn.primary:hover{background:var(--tox-d);border-color:var(--tox-d)}
+.btn.ghost:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* stats */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(142px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:22px}
+.facts div{background:var(--bg2);padding:14px 16px}
+.facts .k{font-family:var(--cond);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan)}
+.facts .v{font-family:var(--display);font-size:clamp(12px,3.35vw,19px);line-height:1.15;margin-top:6px;text-transform:uppercase;-webkit-hyphens:auto;hyphens:auto}
+.facts .s{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* news timeline */
+.news{position:relative;padding-left:22px}
+.news::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line2)}
+.item-news{display:block;position:relative;padding:0 0 22px;text-decoration:none}
+.item-news::before{content:"";position:absolute;left:-21px;top:7px;width:11px;height:11px;background:var(--tox)}
+.item-news:last-child{padding-bottom:0}
+.item-news .when{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+.item-news h3{font-family:var(--cond);font-size:20px;font-weight:600;line-height:1.2;margin:2px 0 4px;text-transform:uppercase}
+.item-news p{font-size:14.5px;color:var(--muted);margin:0}
+.item-news:hover h3{color:var(--tox)}
+
+/* gigs */
+.gig{display:grid;grid-template-columns:64px 1fr;gap:16px;padding:16px 0 16px 14px;border-left:3px solid var(--tox);background:linear-gradient(90deg,rgba(163,255,18,.06),transparent 60%);margin-bottom:10px}
+.gig.past{border-left-color:var(--line2);background:none}
+.gig .d{font-family:var(--display);line-height:.95;text-align:left;min-width:0}
+.gig > div{min-width:0;overflow-wrap:anywhere}
+.gig .d b{display:block;font-size:30px}
+.gig .d span{display:block;font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-top:3px}
+.gig.past .d span{color:var(--muted)}
+.gig .d i{display:block;font-style:normal;font-family:var(--cond);font-size:12px;color:var(--dim)}
+.gig h3{font-family:var(--cond);font-size:19px;font-weight:600;line-height:1.2;text-transform:uppercase}
+.gig .v{color:#fff;font-size:15px;margin-top:2px}
+.gig .with{font-size:14px;color:var(--muted);margin-top:4px}
+.gig .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-family:var(--cond);font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px;border:1px solid var(--line2);color:var(--muted);text-decoration:none}
+.chip.hot{background:var(--tox);border-color:var(--tox);color:var(--on-tox)}
+.chip.own{border-color:var(--cyan);color:var(--cyan)}
+a.chip:hover{border-color:#fff;color:#fff}
+.gig .fl{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.gig .fl img{width:70px;height:94px;object-fit:cover;border:1px solid var(--line2);cursor:zoom-in}
+.empty{padding:18px;border:1px dashed var(--line2);color:var(--muted);font-size:15px}
+.pastlist{margin-top:4px}
+.yearhead{font-family:var(--display);font-size:15px;color:var(--dim);letter-spacing:.08em;margin:22px 0 8px;border-bottom:1px solid var(--line);padding-bottom:6px}
+
+/* music */
+.album{padding:26px 0;border-bottom:1px solid var(--line)}
+.album .head{display:grid;grid-template-columns:1fr;gap:22px}
+@media (min-width:640px){.album .head{grid-template-columns:230px 1fr}}
+.album .art{align-self:start;position:relative}
+.album .art img{width:100%;aspect-ratio:1;object-fit:cover}
+.album .art::after{content:"";position:absolute;inset:0;border:1px solid rgba(255,255,255,.14);pointer-events:none}
+.album .art.tox{box-shadow:9px 9px 0 var(--tox)}
+.album .art.cy{box-shadow:9px 9px 0 var(--cyan)}
+.album h3{font-family:var(--display);font-size:clamp(24px,6vw,32px);line-height:1;text-transform:uppercase}
+.album .meta{font-family:var(--cond);font-size:12px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin:8px 0 12px}
+.player{margin:0 0 14px;border:1px solid var(--line2);background:var(--surface);min-height:120px;position:relative}
+.player iframe{display:block;width:100%;height:120px;border:0}
+.player .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);pointer-events:none}
+.player.loaded .ph{display:none}
+.tracks{list-style:none;margin:0 0 14px;padding:0;font-variant-numeric:tabular-nums}
+@media (min-width:640px){.tracks.two{columns:2;column-gap:30px}}
+.tracks li{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:15px;break-inside:avoid}
+.tracks li .n{font-family:var(--cond);color:var(--tox);width:20px;flex:none;font-weight:600}
+.tracks li .t{flex:1}
+.tracks li .len{font-family:var(--cond);color:var(--muted)}
+.stream{display:flex;flex-wrap:wrap;gap:6px}
+.singles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.single{text-decoration:none;display:block}
+.single img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--line)}
+.single b{display:block;font-family:var(--cond);font-size:16px;font-weight:600;text-transform:uppercase;margin-top:8px;line-height:1.15}
+.single span{font-family:var(--cond);font-size:12px;letter-spacing:.12em;color:var(--muted)}
+.single:hover img{outline:2px solid var(--cyan);outline-offset:-2px}
+
+/* videos */
+.vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.vid{display:flex;gap:13px;align-items:center;padding:13px;border:1px solid var(--line);background:var(--bg2);text-decoration:none}
+.vid:hover{border-color:var(--tox)}
+.vid .play{flex:none;width:38px;height:38px;background:var(--tox);display:grid;place-items:center}
+.vid .play svg{width:15px;height:15px;fill:var(--on-tox);margin-left:2px}
+.vid b{font-family:var(--cond);font-size:16px;font-weight:600;display:block;line-height:1.15;text-transform:uppercase}
+.vid span{font-size:12.5px;color:var(--muted)}
+
+/* band */
+.members{display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:10px}
+.member{background:var(--surface);border:1px solid var(--line)}
+.member img{width:100%;aspect-ratio:1;object-fit:cover;filter:grayscale(1) contrast(1.08)}
+.member:hover img{filter:none}
+.member .t{padding:10px 12px 12px;border-top:2px solid var(--tox)}
+.member b{font-family:var(--cond);font-size:16px;font-weight:600;display:block;line-height:1.15;text-transform:uppercase}
+.member span{font-family:var(--cond);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+.member i{display:block;font-style:normal;font-size:12.5px;color:var(--dim);margin-top:5px}
+.quote{border-left:3px solid var(--cyan);padding:4px 0 4px 16px;margin:16px 0}
+.quote p{font-size:17px;margin:0 0 6px}
+.quote cite{font-style:normal;font-family:var(--cond);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.quote cite a{color:var(--cyan)}
+.milestones{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+.milestones div{background:var(--bg2);padding:11px 14px;display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:baseline}
+.milestones b{font-family:var(--display);font-size:16px;color:var(--tox)}
+.milestones span{font-size:14.5px}
+figure{margin:0}
+figcaption{font-size:13px;color:var(--muted);margin-top:8px}
+.bandshot{width:100%;border:1px solid var(--line2)}
+
+/* gallery + links */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
+.grid button{border:1px solid var(--line);background:var(--surface);overflow:hidden;text-align:left;display:block}
+.grid img{width:100%;aspect-ratio:3/4;object-fit:cover;transition:transform .25s}
+.grid button:hover img{transform:scale(1.04)}
+.grid figcaption{padding:7px 9px;font-family:var(--cond);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;margin:0}
+.grid.wide{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.grid.wide img{aspect-ratio:3/2}
+.linklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:8px}
+.linklist a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;border:1px solid var(--line);background:var(--bg2);text-decoration:none;font-family:var(--cond);font-size:15px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.linklist a small{color:var(--muted);font-size:11px;letter-spacing:.12em;text-align:right;font-weight:400;text-transform:none}
+.linklist a:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* shop */
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:10px}
+.item{border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;text-decoration:none}
+.item:hover{border-color:var(--tox)}
+.item img{width:100%;aspect-ratio:1;object-fit:contain;background:#fff}
+.item .t{padding:11px 12px 13px;display:flex;flex-direction:column;gap:5px;flex:1}
+.item b{font-family:var(--cond);font-size:15px;font-weight:600;line-height:1.15;text-transform:uppercase}
+.item .p{margin-top:auto;font-family:var(--display);font-size:16px;color:var(--tox);font-variant-numeric:tabular-nums}
+
+/* lightbox */
+.lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.96);display:none;align-items:center;justify-content:center;padding:16px}
+.lb.open{display:flex}
+.lb img{max-width:100%;max-height:86vh;object-fit:contain;border:1px solid var(--line2)}
+.lb .cap{position:absolute;bottom:calc(14px + var(--sab));left:0;right:0;text-align:center;font-family:var(--cond);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lb .x{position:absolute;top:calc(10px + var(--sat));right:14px;font-size:34px;line-height:1;color:var(--tox)}
+
+footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 16px;font-size:12.5px;color:var(--dim);text-align:center}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="nav" aria-label="Bereiche">
+  <div class="brand"><img src="img/logo.png" alt="Days of Ruin"></div>
+  <button data-v="start" class="on"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3z"/></svg>Start</button>
+  <button data-v="konzerte"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Live</button>
+  <button data-v="musik"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Musik</button>
+  <button data-v="band"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 3-6.5 6.5-6.5s6.5 2.5 6.5 6.5M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20c0-3-1.5-5-4-6"/></svg>Band</button>
+  <button data-v="galerie"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16"/><path d="m3 16 5-5 4 4 3-3 6 6"/></svg>Fotos</button>
+  <button data-v="shop"><svg viewBox="0 0 24 24"><path d="M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0"/></svg>Shop</button>
+</nav>
+
+<div class="content">
+<header class="top">
+  <div class="bar">
+    <img class="mark" src="img/logo.png" alt="Days of Ruin">
+    <a class="live" id="livebadge" href="#konzerte" data-go="konzerte"></a>
+  </div>
+  <div class="rule"></div>
+</header>
+
+<main>
+
+<!-- START -->
+<section class="view active" id="v-start">
+  <div class="hero">
+    <div class="bg"></div>
+    <div class="in">
+      <img class="logo" src="img/logo.png" alt="Days of Ruin Logo">
+      <div class="tag"><b>Old-school Metalcore</b> · Urtenen-Schönbühl, Bern</div>
+      <div class="wack">Sieger Wacken Metal Battle Switzerland 2026</div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="next" id="next"></div>
+    <div class="stamp" id="stamp-next"></div>
+
+    <h2 class="sec">Neu</h2>
+    <div class="news" id="news"></div>
+    <div class="stamp" id="stamp-news"></div>
+
+    <div class="facts">
+      <div><div class="k">Neue EP</div><div class="v">Age of Ignorance</div><div class="s">7 Tracks · 25.09.2026</div></div>
+      <div><div class="k">Seit</div><div class="v">2017</div><div class="s">über 60 Konzerte</div></div>
+      <div><div class="k">Wacken 2026</div><div class="v">Headbangers Stage</div><div class="s">30.07., 15:35 Uhr</div></div>
+      <div><div class="k">Eigenes Festival</div><div class="v">Ruination</div><div class="s">4. Ausgabe in Burgdorf</div></div>
+    </div>
+
+    <h2 class="sec">Reinhören</h2>
+    <p class="note">Der Bandcamp-Player spielt direkt hier. Kaufen und Download laufen über Bandcamp.</p>
+    <div class="player" data-album="1655097585" data-title="Extinction"><div class="ph">Player wird geladen</div></div>
+    <div class="btns">
+      <a class="btn primary" href="https://daysofruin.bandcamp.com/album/age-of-ignorance" target="_blank" rel="noopener">Neue EP vorbestellen</a>
+      <a class="btn ghost" href="#musik" data-go="musik">Alle Releases</a>
+    </div>
+
+    <h2 class="sec">Videos</h2>
+    <div class="vids">
+      <a class="vid" href="https://www.youtube.com/watch?v=nnyL9vNIgIo" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Another Day in Hell</b><span>Lyric-Video · 2026</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=30KbwKNp7dI" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Stand Up</b><span>Live am Wacken Metal Battle · 2026</span></div></a>
+    </div>
+
+    <h2 class="sec">Folgen</h2>
+    <div class="linklist">
+      <a href="https://www.daysofruin.ch" target="_blank" rel="noopener">Website <small>daysofruin.ch</small></a>
+      <a href="https://www.instagram.com/daysofruin_official/" target="_blank" rel="noopener">Instagram <small>@daysofruin_official</small></a>
+      <a href="https://www.facebook.com/DaysofRuinHC/" target="_blank" rel="noopener">Facebook <small>DaysofRuinHC</small></a>
+      <a href="https://www.tiktok.com/@daysofruin" target="_blank" rel="noopener">TikTok <small>@daysofruin</small></a>
+      <a href="https://www.youtube.com/@DaysofRuinSwiss" target="_blank" rel="noopener">YouTube <small>@DaysofRuinSwiss</small></a>
+      <a href="https://daysofruin.bandcamp.com/" target="_blank" rel="noopener">Bandcamp <small>hören &amp; kaufen</small></a>
+    </div>
+  </div>
+</section>
+
+<!-- KONZERTE -->
+<section class="view" id="v-konzerte">
+  <div class="wrap">
+    <h2 class="sec">Live</h2>
+    <p class="eyebrow">Kommende Shows</p>
+    <div id="upcoming"></div>
+    <div class="stamp" id="stamp-upcoming"></div>
+    <p class="note" style="margin-top:14px">Booking: <a href="mailto:booking@daysofruin.ch">booking@daysofruin.ch</a> · Termine auch auf <a href="https://www.bandsintown.com/a/1494782" target="_blank" rel="noopener">Bandsintown</a> und <a href="https://www.daysofruin.ch/on-stage" target="_blank" rel="noopener">daysofruin.ch</a>.</p>
+
+    <h2 class="sec">Ruination Metal Fest</h2>
+    <p>Das Ruination Metal Fest ist das eigene Festival der Band, zusammen mit der Kulturhalle Sägegasse in Burgdorf. Es fand 2023 zum ersten Mal statt und will aufstrebenden Bands eine Bühne und dem Publikum eine Metal-Party zu einem fairen Preis bieten.</p>
+    <p class="note">Die vierte Ausgabe läuft am 28. November 2026 ab 15:30 Uhr mit acht Bands. Days of Ruin spielen um 21:30 Uhr.</p>
+    <div class="btns">
+      <a class="btn primary" href="https://eventfrog.ch/de/p/konzerte/hard-rock-heavy-metal/ruination-metal-fest-4-kulturhalle-saegegasse-in-burgdorf-7407728967950568280.html" target="_blank" rel="noopener">Tickets</a>
+      <a class="btn ghost" href="https://www.daysofruin.ch/ruination-metal-fest" target="_blank" rel="noopener">Infos &amp; Anreise</a>
+      <a class="btn ghost" href="https://open.spotify.com/playlist/4EZ3ysi702sEC9pTf56eTv" target="_blank" rel="noopener">Playlist</a>
+    </div>
+
+    <h2 class="sec">Bisher gespielt</h2>
+    <div class="pastlist" id="past"></div>
+  </div>
+</section>
+
+<!-- MUSIK -->
+<section class="view" id="v-musik">
+  <div class="wrap">
+    <h2 class="sec">Musik</h2>
+
+    <div class="album">
+      <div class="head">
+        <button class="zoom art tox" data-src="img/cover-aoi.jpg" data-cap="Age of Ignorance (2026), Artwork Enrico Sterlacci"><img src="img/cover-aoi.jpg" alt="Cover Age of Ignorance"></button>
+        <div>
+          <h3>Age of Ignorance</h3>
+          <div class="meta">EP · 25. September 2026 · 7 Tracks · 23 Min.</div>
+          <div class="player" data-album="2357330349" data-title="Age of Ignorance"><div class="ph">Player wird geladen</div></div>
+          <ol class="tracks two">
+            <li><span class="n">1</span><span class="t">Another Day in Hell</span><span class="len">4:50</span></li>
+            <li><span class="n">2</span><span class="t">Goodbye Forever</span><span class="len"></span></li>
+            <li><span class="n">3</span><span class="t">Beneath the Waves</span><span class="len"></span></li>
+            <li><span class="n">4</span><span class="t">Fear of Death</span><span class="len"></span></li>
+            <li><span class="n">5</span><span class="t">Your Own Misery</span><span class="len"></span></li>
+            <li><span class="n">6</span><span class="t">Poison</span><span class="len"></span></li>
+            <li><span class="n">7</span><span class="t">Stand Up</span><span class="len"></span></li>
+          </ol>
+          <p class="note">Aufgenommen, gemischt und gemastert von Sebastian Schiess im SOS Basement. Artwork von Drummer Enrico Sterlacci. Erscheint digital, Vinyl folgt.</p>
+          <div class="stream">
+            <a class="chip hot" href="https://daysofruin.bandcamp.com/album/age-of-ignorance" target="_blank" rel="noopener">Bandcamp</a>
+            <a class="chip" href="https://open.spotify.com/artist/59oMejeYq8SPQKLKuqKfO8" target="_blank" rel="noopener">Spotify</a>
+            <a class="chip" href="https://music.apple.com/ch/artist/days-of-ruin/283082736" target="_blank" rel="noopener">Apple Music</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="album">
+      <div class="head">
+        <button class="zoom art cy" data-src="img/cover-extinction.jpg" data-cap="Extinction (2020)"><img src="img/cover-extinction.jpg" alt="Cover Extinction"></button>
+        <div>
+          <h3>Extinction</h3>
+          <div class="meta">Album · 5. März 2020 · 9 Tracks · 34 Min.</div>
+          <div class="player" data-album="1655097585" data-title="Extinction"><div class="ph">Player wird geladen</div></div>
+          <ol class="tracks two">
+            <li><span class="n">1</span><span class="t">Path of Liberty</span><span class="len">5:19</span></li>
+            <li><span class="n">2</span><span class="t">Manipulated</span><span class="len">3:45</span></li>
+            <li><span class="n">3</span><span class="t">Wake Up</span><span class="len">3:08</span></li>
+            <li><span class="n">4</span><span class="t">Black Fog</span><span class="len">3:44</span></li>
+            <li><span class="n">5</span><span class="t">Form a Unit</span><span class="len">4:04</span></li>
+            <li><span class="n">6</span><span class="t">Blinded Eyes</span><span class="len">2:58</span></li>
+            <li><span class="n">7</span><span class="t">Hill of Ants</span><span class="len">3:28</span></li>
+            <li><span class="n">8</span><span class="t">False Friends</span><span class="len">3:16</span></li>
+            <li><span class="n">9</span><span class="t">Mad House</span><span class="len">4:20</span></li>
+          </ol>
+          <p class="note">Aufgenommen in den Hardbeat Studios, gemischt von Sebastian Schiess, gemastert von Dan Suter (Echochamber). Plattentaufe am 6. März 2020 im Vamp Club Thun. CD im Shop.</p>
+          <div class="stream">
+            <a class="chip hot" href="https://daysofruin.bandcamp.com/album/extinction" target="_blank" rel="noopener">Bandcamp</a>
+            <a class="chip" href="https://open.spotify.com/album/5Aw5fpYkKXJdUPdGDJICT2" target="_blank" rel="noopener">Spotify</a>
+            <a class="chip" href="https://music.apple.com/ch/album/extinction/1494590864" target="_blank" rel="noopener">Apple Music</a>
+            <a class="chip" href="https://www.deezer.com/album/126454432" target="_blank" rel="noopener">Deezer</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="album">
+      <div class="head">
+        <button class="zoom art tox" data-src="img/cover-predators.jpg" data-cap="Of Predators and Prey (2018)"><img src="img/cover-predators.jpg" alt="Cover Of Predators and Prey"></button>
+        <div>
+          <h3>Of Predators and Prey</h3>
+          <div class="meta">EP · 23. Februar 2018 · 6 Tracks · 21 Min.</div>
+          <div class="player" data-album="3758925312" data-title="Of Predators and Prey"><div class="ph">Player wird geladen</div></div>
+          <ol class="tracks two">
+            <li><span class="n">1</span><span class="t">Fight Together</span><span class="len">3:36</span></li>
+            <li><span class="n">2</span><span class="t">Devoured</span><span class="len">3:02</span></li>
+            <li><span class="n">3</span><span class="t">Human Downfall</span><span class="len">4:37</span></li>
+            <li><span class="n">4</span><span class="t">Hope's Last</span><span class="len">4:14</span></li>
+            <li><span class="n">5</span><span class="t">Dead Inside</span><span class="len">2:40</span></li>
+            <li><span class="n">6</span><span class="t">I Don't Believe</span><span class="len">3:08</span></li>
+          </ol>
+          <p class="note">Erste Veröffentlichung der Band, aufgenommen in den Hardbeat Studios.</p>
+          <div class="stream">
+            <a class="chip hot" href="https://daysofruin.bandcamp.com/album/of-predators-and-prey" target="_blank" rel="noopener">Bandcamp</a>
+            <a class="chip" href="https://open.spotify.com/album/2C9LbSq1G7SvlHxDPNw8Cj" target="_blank" rel="noopener">Spotify</a>
+            <a class="chip" href="https://music.apple.com/ch/album/of-predators-and-prey-ep/1324581211" target="_blank" rel="noopener">Apple Music</a>
+            <a class="chip" href="https://www.deezer.com/album/53349222" target="_blank" rel="noopener">Deezer</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="sec">Singles</h2>
+    <div class="singles">
+      <a class="single" href="https://open.spotify.com/album/1gro1gZIDjkAI9sl8esC1O" target="_blank" rel="noopener"><img src="img/single-anotherday.jpg" alt="Another Day in Hell"><b>Another Day in Hell</b><span>10.07.2026 · 4:50</span></a>
+      <a class="single" href="https://open.spotify.com/album/6MphwS7xNZTG6xhkElbFJu" target="_blank" rel="noopener"><img src="img/single-fallingsky.jpg" alt="Falling Sky"><b>Falling Sky</b><span>14.11.2025 · 4:34</span></a>
+      <a class="single" href="https://open.spotify.com/album/3MZmC3vEWImYrGS349kqO9" target="_blank" rel="noopener"><img src="img/single-elements.jpg" alt="Elements"><b>Elements</b><span>18.04.2025 · 5:03</span></a>
+      <a class="single" href="https://open.spotify.com/album/79xsSvZepNxxGXFCa9DlC0" target="_blank" rel="noopener"><img src="img/single-dtwe.jpg" alt="The Day the World Ends"><b>The Day the World Ends</b><span>21.02.2025 · 5:53</span></a>
+    </div>
+
+    <h2 class="sec">Videos</h2>
+    <div class="vids">
+      <a class="vid" href="https://www.youtube.com/watch?v=nnyL9vNIgIo" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Another Day in Hell</b><span>Lyric-Video · 2026</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=30KbwKNp7dI" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Stand Up</b><span>Live in Wacken · 2026</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=YE2VnXas-B8" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Age of Ignorance</b><span>EP-Teaser · 2026</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=uR67g6MZ_FE" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Falling Sky</b><span>Musikvideo · 2025</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=U44LO_og904" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Elements</b><span>Musikvideo · 2025</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=6tiWeOC81L8" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>The Day the World Ends</b><span>Drum-Playthrough · 2025</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=1OXcTq0N5FE" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Mad House</b><span>Musikvideo · 2020</span></div></a>
+      <a class="vid" href="https://www.youtube.com/watch?v=LD33pOl69rE" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Bullhead Festival 2024</b><span>Ganzes Konzert · 32 Min.</span></div></a>
+      <a class="vid" href="https://www.youtube.com/@DaysofRuinSwiss" target="_blank" rel="noopener"><div class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></div><div><b>Alle Videos</b><span>YouTube-Kanal</span></div></a>
+    </div>
+
+    <h2 class="sec">Streaming</h2>
+    <div class="linklist">
+      <a href="https://daysofruin.bandcamp.com/" target="_blank" rel="noopener">Bandcamp <small>Digital · Vinyl</small></a>
+      <a href="https://open.spotify.com/artist/59oMejeYq8SPQKLKuqKfO8" target="_blank" rel="noopener">Spotify <small>Artist</small></a>
+      <a href="https://music.apple.com/ch/artist/days-of-ruin/283082736" target="_blank" rel="noopener">Apple Music <small>Artist</small></a>
+      <a href="https://www.deezer.com/artist/4511604" target="_blank" rel="noopener">Deezer <small>Artist</small></a>
+      <a href="https://mx3.ch/daysofruin" target="_blank" rel="noopener">Mx3.ch <small>SRG-Plattform</small></a>
+      <a href="https://linktr.ee/daysofruin" target="_blank" rel="noopener">Linktree <small>alle Links</small></a>
+    </div>
+  </div>
+</section>
+
+<!-- BAND -->
+<section class="view" id="v-band">
+  <div class="wrap">
+    <h2 class="sec">Band</h2>
+    <figure>
+      <button class="zoom" data-src="img/band.jpg" data-cap="Days of Ruin 2026, Foto Eric Lindegger"><img class="bandshot" src="img/band.jpg" alt="Bandfoto Days of Ruin"></button>
+      <figcaption>Pressefoto 2026, Foto: Eric Lindegger.</figcaption>
+    </figure>
+
+    <h2 class="sec">Besetzung</h2>
+    <div class="members">
+      <div class="member"><img src="img/m-stucki.jpg" alt="Michael Stucki" loading="lazy"><div class="t"><b>Michael Stucki</b><span>Vocals</span><i>seit 2018 · vorher Art of Phobia</i></div></div>
+      <div class="member"><img src="img/m-ablondi.jpg" alt="Denis Ablondi" loading="lazy"><div class="t"><b>Denis Ablondi</b><span>Gitarre</span><i>Gründer · vorher Road to Nowhere</i></div></div>
+      <div class="member"><img src="img/m-dragonetti.jpg" alt="Silvano Dragonetti" loading="lazy"><div class="t"><b>Silvano Dragonetti</b><span>Gitarre</span><i>Gründer · vorher Omnicide</i></div></div>
+      <div class="member"><img src="img/m-angst.jpg" alt="Raphael Angst" loading="lazy"><div class="t"><b>Raphael Angst</b><span>Bass</span><i>seit 2021 · auch The Exiled</i></div></div>
+      <div class="member"><img src="img/m-sterlacci.jpg" alt="Enrico Sterlacci" loading="lazy"><div class="t"><b>Enrico Sterlacci</b><span>Drums</span><i>Gründer · macht auch das Artwork</i></div></div>
+    </div>
+
+    <h2 class="sec">Geschichte</h2>
+    <p class="lead">Days of Ruin verbinden Old-school-Metalcore mit der Schwere von Death Metal, treibenden Grooves und kompromissloser Live-Energie.</p>
+    <p>Gegründet wurde die Band 2017 von ehemaligen Mitgliedern von Road To Nowhere, Omnicide und Paranoia. Kurz darauf stiess Michael Stucki dazu, früher Sänger von Art of Phobia. Das erste Konzert spielte die Band im September 2017 als Opener für Hatesphere.</p>
+    <p>Es gehe nicht um akribisch konstruierte Images oder maximale Komplexität, schreibt die Band über sich, sondern um Authentizität, Spielfreude und den direkten Draht zum Publikum. Diese Bühnenpräsenz hat sich das Quintett aus dem Kanton Bern seit 2017 in über sechzig Konzerten in der ganzen Schweiz erarbeitet.</p>
+
+    <h2 class="sec">Der Weg nach Wacken</h2>
+    <p>Am 28. März 2026 gewann die Band ihr Halbfinale des Wacken Metal Battle Switzerland in der Kupferschmiede Langnau. Am 16. Mai setzte sie sich im Finale im Le Romandie in Lausanne gegen sieben weitere Bands durch. Der Preis: ein Auftritt am Wacken Open Air.</p>
+    <p>Am 30. Juli 2026 spielten Days of Ruin von 15:35 bis 15:55 Uhr auf der Headbangers Stage, als eine von elf nationalen Metal-Battle-Siegerbands.</p>
+    <div class="quote"><p>«Und die riesige Grösse der Bühne und die riesige Grösse des Geländes und die Menge der Leute, das ist so beeindruckend.»</p><cite>Denis Ablondi, Gitarre, im Interview mit <a href="https://www.neo1.ch/artikel/die-metalcore-band-days-of-ruin-ging-nach-wacken" target="_blank" rel="noopener">Radio neo1</a></cite></div>
+    <div class="quote"><p>«Es ist, als hätte man vier Festivals in einem.»</p><cite>Silvano Dragonetti, Gitarre, über Wacken</cite></div>
+
+    <h2 class="sec">Meilensteine</h2>
+    <div class="milestones">
+      <div><b>2017</b><span>Erstes Konzert als Opener für Hatesphere</span></div>
+      <div><b>2018</b><span>Live-Debüt von Sänger Michael Stucki im Gaskessel Bern</span></div>
+      <div><b>2020</b><span>Plattentaufe von «Extinction» im Vamp Club Thun</span></div>
+      <div><b>2023</b><span>Erstes eigenes Ruination Metal Fest mit über 200 Gästen</span></div>
+      <div><b>2024</b><span>Opener am ersten Bullhead Festival</span></div>
+      <div><b>2025</b><span>Konzert Nummer 50 im Mokka in Thun</span></div>
+      <div><b>2026</b><span>Sieg am Wacken Metal Battle Switzerland und Auftritt in Wacken</span></div>
+    </div>
+
+    <h2 class="sec">Über die EP</h2>
+    <p>«Age of Ignorance» ist laut Band eine Reise durch Verzweiflung, Verrat, Trauer und die sture Weigerung, sich brechen zu lassen. Der Titel ist doppeldeutig gemeint: dass «AI» darin steckt, sei kein Zufall.</p>
+    <div class="quote"><p>«Wir wollten ein zentrales Bild, das die Idee sofort vermittelt: ein Kind, das am Bildschirm klebt, während die Welt um es herum brennt.»</p><cite>Die Band über das Artwork, <a href="https://www.breathingthecore.com/2026/09/behind-artworks-days-of-ruin-age-of.html" target="_blank" rel="noopener">Breathing The Core</a></cite></div>
+    <p class="note">Das Cover zitiert bewusst Korns «Follow the Leader», «Stranger Things» und die Spielplatzszene aus Terminator 2.</p>
+
+    <h2 class="sec">Presse</h2>
+    <div class="quote"><p>«Fantastisch, welch ausgelassene Stimmung die Fans dauernd erzeugen. Zwei Wall-of-Death-Kollisionen, wildes Herumgehüpfe, Moshpits. Geschuldet ist dies glasklar dieser headlinerwürdigen Show des Quintetts.»</p><cite>Dutti, <a href="https://www.metalinside.ch/2024/01/written-by-witches-met-bar-lenzburg-2023-review/" target="_blank" rel="noopener">metalinside.ch</a>, Met-Bar Lenzburg</cite></div>
+    <div class="quote"><p>«Days of Ruin bringen Old-school-Metalcore aus dem Kanton Bern ins Finale. Die Band setzt auf rohe Kraft und eine klare Kante.»</p><cite>Le Romandie, Wacken Metal Battle Finale 2026</cite></div>
+
+    <h2 class="sec">Kontakt &amp; Presse</h2>
+    <div class="linklist">
+      <a href="mailto:booking@daysofruin.ch">Booking <small>booking@daysofruin.ch</small></a>
+      <a href="https://drive.google.com/drive/folders/1vyFBHmNFeW1U9OJpJkbaFcHilS-RNKa7" target="_blank" rel="noopener">EPK <small>PDF, DE &amp; EN</small></a>
+      <a href="https://drive.google.com/drive/folders/1DfGAmgyxEqtAi8dQmrN2NaJDlTS4bsAd" target="_blank" rel="noopener">Tech Rider <small>PDF</small></a>
+      <a href="https://drive.google.com/drive/folders/1wJyrZcr3LpY4f2etVqSVCp_RHRjAnVQ2" target="_blank" rel="noopener">Logos <small>6 Varianten</small></a>
+      <a href="https://drive.google.com/drive/folders/1EsZThSWqPdISGcbpScU9qGIidc3ypPDE" target="_blank" rel="noopener">Konzertbilder <small>15 Ordner</small></a>
+      <a href="https://bookyourstage.ch/Bands/DAYS-OF-RUIN/" target="_blank" rel="noopener">BookYourStage <small>Bandprofil</small></a>
+    </div>
+
+    <h2 class="sec">Alle Links</h2>
+    <div class="linklist" id="alllinks"></div>
+  </div>
+</section>
+
+<!-- GALERIE -->
+<section class="view" id="v-galerie">
+  <div class="wrap">
+    <h2 class="sec">Fotos</h2>
+    <p class="eyebrow">Band &amp; Live</p>
+    <div class="grid wide" id="photos"></div>
+    <p class="eyebrow" style="margin-top:26px">Flyer</p>
+    <div class="grid" id="flyers"></div>
+    <p class="eyebrow" style="margin-top:26px">Konzertgalerien (extern)</p>
+    <div class="linklist">
+      <a href="https://plekvetica.ch/konzertfotos/maf/galleries/days-of-ruin-kupferschmiede-langnau-19-04-2025" target="_blank" rel="noopener">Kupferschmiede Langnau <small>19.04.2025</small></a>
+      <a href="https://plekvetica.ch/konzertfotos/maf/galleries/days-of-ruin-kulturhalle-saegegasse-burgdorf-16-12-2023" target="_blank" rel="noopener">Ruination Metal Fest <small>16.12.2023</small></a>
+      <a href="https://plekvetica.ch/konzertfotos/maf/galleries/days-of-ruin-kupferschmiede-langnau-08-04-2023" target="_blank" rel="noopener">Kupferschmiede Langnau <small>08.04.2023</small></a>
+      <a href="https://plekvetica.ch/konzertfotos/maf/galleries/days-of-ruin-gaskessel-bern-23-02-2018" target="_blank" rel="noopener">Gaskessel Bern <small>23.02.2018</small></a>
+      <a href="https://www.instagram.com/daysofruin_official/" target="_blank" rel="noopener">Instagram <small>aktuelle Fotos</small></a>
+    </div>
+  </div>
+</section>
+
+<!-- SHOP -->
+<section class="view" id="v-shop">
+  <div class="wrap">
+    <h2 class="sec">Shop</h2>
+    <p class="note">Preise gemäss offiziellem Shop. Versand nur innerhalb der Schweiz, ab CHF 50 gratis. Die CD gibt es gratis zu jeder anderen Bestellung.</p>
+    <div class="shop" id="shop"></div>
+    <div class="btns" style="margin-top:18px">
+      <a class="btn primary" href="https://eef893.myshopify.com/" target="_blank" rel="noopener">Zum Shop</a>
+      <a class="btn ghost" href="https://daysofruin.bandcamp.com/" target="_blank" rel="noopener">Bandcamp</a>
+    </div>
+  </div>
+</section>
+
+<footer>Inoffizielle Fan-App · Daten von daysofruin.ch, Bandcamp, Bandsintown, Plekvetica, metalinside.ch, neo1 · Bilder © Days of Ruin, Fotos Eric Lindegger</footer>
+</main>
+</div>
+</div>
+
+<div class="lb" id="lb" role="dialog" aria-label="Bild"><button class="x" aria-label="Schliessen">×</button><img alt=""><div class="cap"></div></div>
+
+<script>
+const FEED_URL = 'https://raw.githubusercontent.com/sebastianbuergy-oss/days-of-ruin-ios/main/feed/feed.json';
+const BIT_URL = 'https://rest.bandsintown.com/artists/id_1494782/events?app_id=js_daysofruin.ch&date=upcoming';
+const MONTHS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const WEEKDAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+const bundled = {
+  updated: '2026-09-12',
+  upcoming: [
+    {date:'2026-10-03',time:'20:00',title:'Core Night – EP Release Born in Dorian',venue:'Moshpit Music Club',city:'Naters',lineup:'Born in Dorian, Still Untitled, Days of Ruin, With Heart',note:'Türöffnung 20:00.',tickets:'',url:'https://www.bandsintown.com/e/108644016'},
+    {date:'2026-11-07',time:'19:30',title:'Swiss Metal Night',venue:'Fabrik',city:'Chur',lineup:'The Awakening, ArcAine, Days of Ruin, All Against Reason',note:'Doors 19:30, Start 20:00. VVK 30 CHF / AK 35 CHF.',tickets:'https://eventfrog.ch/de/p/konzerte/hard-rock-heavy-metal/swiss-metal-night-7502376634437088140.html',url:''},
+    {date:'2026-11-28',time:'15:30',title:'Ruination Metal Fest 4',venue:'Kulturhalle Sägegasse',city:'Burgdorf',lineup:'Antipodes, Devils Rage, Born in Dorian, Ophelia’s Eye, Novara Nyx, Days of Ruin, I Delusionist, The Boyz from Karma',note:'Eigenes Festival der Band. Days of Ruin 21:30–22:15.',tickets:'https://eventfrog.ch/de/p/konzerte/hard-rock-heavy-metal/ruination-metal-fest-4-kulturhalle-saegegasse-in-burgdorf-7407728967950568280.html',url:'https://www.daysofruin.ch/ruination-metal-fest'},
+    {date:'2026-12-05',time:'20:00',title:'ArcAine, Days of Ruin & Sons of Coherence',venue:'Met-Bar',city:'Lenzburg',lineup:'Sons of Coherence, Days of Ruin, ArcAine',note:'Doors 20:00, Start 20:30. Eintritt 20 CHF.',tickets:'https://eventfrog.ch/de/p/konzerte/hard-rock-heavy-metal/arcaine-days-of-ruin-sons-of-coherence-live-7487565935789789708.html',url:''},
+    {date:'2026-12-12',time:'17:30',title:'Nyon’s on Fire',venue:'Usine à Gaz',city:'Nyon',lineup:'Impure Wilhelmina, Hey Satan, Blown, De l’Abîme Naît l’Aube, Days of Ruin, Somora',note:'',tickets:'',url:'https://usineagaz.ch/event/nyons-on-fire-2/'},
+    {date:'2027-05-14',time:'',title:'10 Jahre Days of Ruin',venue:'Mahogany Hall',city:'Bern',lineup:'',note:'Jubiläumsshow zum zehnjährigen Bestehen.',tickets:'',url:''}
+  ],
+  news: [
+    {date:'2026-09-25',source:'Bandcamp',title:'EP «Age of Ignorance» erscheint',text:'Sieben Tracks, 23 Minuten, aufgenommen im SOS Basement. Erste Veröffentlichung seit sechs Jahren.',url:'https://daysofruin.bandcamp.com/album/age-of-ignorance'},
+    {date:'2026-09-01',source:'YouTube',title:'«Stand Up» live vom Wacken Metal Battle',text:'Die Band veröffentlicht ihren Auftritt mit «Stand Up» als Live-Video.',url:'https://www.youtube.com/watch?v=30KbwKNp7dI'},
+    {date:'2026-07-30',source:'Wacken Open Air',title:'Auftritt auf der Headbangers Stage',text:'Als Schweizer Vertretung des Metal Battle um 15:35 Uhr auf dem grössten Metal-Festival der Welt.',url:'https://www.metal-battle.com/line-up/'},
+    {date:'2026-07-10',source:'The Metallist PR',title:'Lyric-Video zu «Another Day in Hell»',text:'Erste Single aus der EP, dazu die internationale Ankündigung.',url:'https://www.youtube.com/watch?v=nnyL9vNIgIo'},
+    {date:'2026-05-16',source:'Wacken Metal Battle',title:'Sieg im Finale in Lausanne',text:'Days of Ruin gewinnen gegen sieben andere Finalisten und lösen das Ticket nach Wacken.',url:'https://www.neo1.ch/artikel/die-metalcore-band-days-of-ruin-will-nach-wacken'}
+  ]
+};
+
+const past = [
+  {date:'2026-07-30',t:'Wacken Metal Battle, Headbangers Stage',v:'Wacken Open Air, Wacken (DE)',w:'11 nationale Metal-Battle-Sieger',hot:'Wacken'},
+  {date:'2026-06-23',t:'Support für Hollywood Undead',v:'Usine, Genf',w:'Hollywood Undead, Days of Ruin'},
+  {date:'2026-05-29',t:'Metal im Schloss',v:'Köniz'},
+  {date:'2026-05-16',t:'Wacken Metal Battle Schweiz, Finale',v:'Le Romandie, Lausanne',w:'8 Finalisten',hot:'Gewonnen'},
+  {date:'2026-03-28',t:'Wacken Metal Battle Schweiz, Halbfinale',v:'Kupferschmiede, Langnau i. E.',w:'Ticket to Nowhere, Days of Ruin, Artifiction, Dame Tu Alma',hot:'Gewonnen'},
+  {date:'2026-01-31',t:'Metal Night',v:'Estri.ch, Winistorf',w:'Against the Machine, Void Machine'},
+  {date:'2026-01-24',t:'minus 3',v:'Bern'},
+  {date:'2025-11-29',t:'Ruination Metal Fest 3',v:'Kulturhalle Sägegasse, Burgdorf',w:'Path of Wrath, Save Your Last Breath, Irony of Fate',own:true,fl:['flyer-2025-11-29.jpg']},
+  {date:'2025-10-30',t:'Small Town Sounds Vol. 25',v:'Mokka, Thun',w:'Beyond Dystopia',note:'Konzert Nummer 50'},
+  {date:'2025-10-17',t:'Gaswerk',v:'Winterthur',w:'The Awakening, Save Your Last Breath'},
+  {date:'2025-08-30',t:'Wyssrüti Festival',v:'Wyssrüti (LU)',w:'Decapitated, Space of Variations, Sickret, Expellow'},
+  {date:'2025-07-25',t:'Rotten Rock Fest',v:'Goms (VS)',w:'Deez Nuts, Crystal Lake, Maid of Ace'},
+  {date:'2025-06-06',t:'Metal Breed Bern Summer Attack',v:'Mahogany Hall, Bern',w:'Irony of Fate'},
+  {date:'2025-05-24',t:'Corebound Vol. 2',v:'Valhalla, Basel',w:'Moment of Madness, Disinclined'},
+  {date:'2025-04-19',t:'Plattentaufe Avalanche',v:'Kupferschmiede, Langnau i. E.',w:'Insanity61, Weak Die First'},
+  {date:'2025-04-12',t:'Joker Bar',v:'Sissach',w:'Wrath of Alga'},
+  {date:'2025-03-22',t:'District 28',v:'Siebnen',w:'The Kate Effect, Hyperium'},
+  {date:'2024-11-23',t:'Ruination Metal Fest 2',v:'Kulturhalle Sägegasse, Burgdorf',w:'Blown, All Against Reason, Wrath of Alga, Expellow, Sickret',own:true},
+  {date:'2024-11-09',t:'Hell over Malibu',v:'Malibu, Bern',w:'Anger in Defeat, Avalanche, Omissis'},
+  {date:'2024-10-26',t:'Metal Apocalypse',v:'Mundwerk Kulturbiotop, Oerlikon',w:'The Kate Effect, With One Word'},
+  {date:'2024-10-19',t:'Night of Destruction Vol. 4',v:'Moshpit, Naters',w:'All Against Reason, Narvik'},
+  {date:'2024-10-12',t:'Plattentaufe Expellow',v:'Dynamo Werk 21, Zürich',w:'A Lost Game'},
+  {date:'2024-07-20',t:'Bullhead Summer Edition',v:'Schwellisee Kiosk, Malters'},
+  {date:'2024-04-27',t:'Hurry-Kane',v:'Diessenhofen',w:'Irony of Fate'},
+  {date:'2024-03-24',t:'Müli Metal Matinée',v:'Müli Deisswil, Stettlen',w:'A Small District, Omissis, Nice to Eat You'},
+  {date:'2024-03-10',t:'Heavy Sanctum',v:'SOHO, Wangen a. d. Aare'},
+  {date:'2024-03-08',t:'Bullhead Festival, Opener',v:'Schüür, Luzern'},
+  {date:'2024-03-02',t:'Improvisorium',v:'Huttwil',w:'Comaniac'},
+  {date:'2023-12-23',t:'X-Mass is Coming to Town',v:'Met-Bar, Lenzburg',w:'Written by Witches, Days of Ruin, Dark Gravity'},
+  {date:'2023-12-16',t:'Ruination Metal Fest 1',v:'Kulturhalle Sägegasse, Burgdorf',w:'Whiteout, Among Vultures, The Kate Effect, Thy Gnosis, Nice to Eat You',own:true},
+  {date:'2023-12-02',t:'Metal Marmot Festival',v:'Hotel Simplon, Frutigen',w:'Tankard, Exhumer, Excelsis'},
+  {date:'2023-11-19',t:'There are worse Bands',v:'Sedel, Luzern',w:'Sin Imperio'},
+  {date:'2023-09-30',t:'Move Your Feet Festival 8',v:'Kofmehl Raumbar, Solothurn',w:'Unified Move, My Terror'},
+  {date:'2023-07-01',t:'The Bruch Brothers',v:'Luzern',w:'Declass, Path of Wrath'},
+  {date:'2023-04-08',t:'Plattentaufe Avalanche',v:'Kupferschmiede, Langnau',w:'Nice to Eat You, Declass'},
+  {date:'2023-03-10',t:'Eldorado',v:'Biel',w:'Among Vultures, Blackwind'},
+  {date:'2022-12-17',t:'Stroke of Fate Vol. 11',v:'Chillout, Boswil',w:'Broken Fate, Virvum, Sore Point, Face the End'},
+  {date:'2022-12-10',t:'Local Heroes',v:'Kulturhalle Sägegasse, Burgdorf',w:'Irony of Fate, The Exiled'},
+  {date:'2022-11-19',t:'Cafete',v:'Bern'},
+  {date:'2022-09-03',t:'Elch Club',v:'Ostermundigen'},
+  {date:'2022-05-28',t:'Müli Deisswil',v:'Stettlen'},
+  {date:'2021-10-02',t:'Sägecore',v:'Kulturhalle Sägegasse, Burgdorf'},
+  {date:'2020-08-06',t:'Mannried Open Air',v:'Mannried'},
+  {date:'2020-03-06',t:'Plattentaufe «Extinction»',v:'Vamp Club, Thun',hot:'Release'},
+  {date:'2020-01-18',t:'Januarloch',v:'Bandraum'},
+  {date:'2019-12-07',t:'Ebrietas',v:'Zürich'},
+  {date:'2019-11-23',t:'Cafete',v:'Bern'},
+  {date:'2019-11-16',t:'AkUT',v:'Thun'},
+  {date:'2019-03-08',t:'Vamp Club',v:'Thun'},
+  {date:'2018-10-20',t:'Koch Areal',v:'Zürich'},
+  {date:'2018-10-12',t:'Cafete',v:'Bern'},
+  {date:'2018-09-22',t:'Improvisorium',v:'Huttwil'},
+  {date:'2018-09-01',t:'Met-Bar',v:'Lenzburg'},
+  {date:'2018-06-23',t:'Das O',v:'Spiez'},
+  {date:'2018-02-23',t:'Gaskessel, Live-Debüt von Michael Stucki',v:'Bern'},
+  {date:'2017-11-18',t:'Das O',v:'Spiez'},
+  {date:'2017-09-22',t:'Erstes Konzert, Opener für Hatesphere',v:'Böröm Pöm Pöm',hot:'Erste Show'}
+];
+
+const flyerCaps = {
+  'flyer-2026-11-28.jpg':'Ruination Metal Fest 4 · Burgdorf · 28.11.2026',
+  'flyer-2026-10-03.jpg':'Core Night · Moshpit Naters · 03.10.2026',
+  'flyer-2026-11-07.jpg':'Swiss Metal Night · Fabrik Chur · 07.11.2026',
+  'flyer-2026-12-05.jpg':'Met-Bar · Lenzburg · 05.12.2026',
+  'flyer-2025-11-29.jpg':'Ruination Metal Fest 3 · Burgdorf · 29.11.2025'
+};
+const photos = [
+  ['band.jpg','Pressefoto 2026'],
+  ['band-backstage.jpg','Backstage'],
+  ['band-old.jpg','Früheres Bandfoto'],
+  ['live-guitar.jpg','Live auf der Bühne'],
+  ['live-crowd.jpg','Publikum Open Air'],
+  ['live-pit.jpg','Moshpit'],
+  ['live-hall.jpg','Volle Halle'],
+  ['live-setlist.jpg','Setlist'],
+  ['cover-aoi.jpg','Artwork «Age of Ignorance»']
+];
+const shop = [
+  ['shop-hoodie.jpg','Hoodie «Deathbringer»','40.00'],
+  ['shop-zip.jpg','Zip-Hoodie «Deathbringer»','45.00'],
+  ['shop-shorts.jpg','Mesh-Shorts (Mosh-Pants)','35.00'],
+  ['shop-cap.jpg','Snapback Cap mit Logo','25.00'],
+  ['shop-madness.jpg','T-Shirt «Madness»','20.00'],
+  ['shop-scream.jpg','T-Shirt «Scream»','20.00'],
+  ['shop-beanie.jpg','Beanie mit Logo','15.00'],
+  ['shop-cd.jpg','CD «Extinction»','10.00']
+];
+const links = [
+  ['Website','daysofruin.ch','https://www.daysofruin.ch/'],
+  ['Instagram','@daysofruin_official','https://www.instagram.com/daysofruin_official/'],
+  ['Facebook','DaysofRuinHC','https://www.facebook.com/DaysofRuinHC/'],
+  ['TikTok','@daysofruin','https://www.tiktok.com/@daysofruin'],
+  ['YouTube','@DaysofRuinSwiss','https://www.youtube.com/@DaysofRuinSwiss'],
+  ['Bandcamp','daysofruin.bandcamp.com','https://daysofruin.bandcamp.com/'],
+  ['Spotify','Artist','https://open.spotify.com/artist/59oMejeYq8SPQKLKuqKfO8'],
+  ['Apple Music','Artist','https://music.apple.com/ch/artist/days-of-ruin/283082736'],
+  ['Deezer','Artist','https://www.deezer.com/artist/4511604'],
+  ['Bandsintown','Konzerte folgen','https://www.bandsintown.com/a/1494782'],
+  ['Plekvetica','Events & Fotos','https://plekvetica.ch/band/days-of-ruin/'],
+  ['metalgigs.ch','Bandprofil','https://metalgigs.ch/bands/6515/days-of-ruin'],
+  ['heavymetal.ch','Bandprofil','https://www.heavymetal.ch/artists/4288/days-of-ruin'],
+  ['Mx3.ch','Bandprofil','https://mx3.ch/daysofruin'],
+  ['Discogs','Diskografie','https://www.discogs.com/artist/8057618-Days-Of-Ruin-2'],
+  ['Shop','Merch','https://eef893.myshopify.com/'],
+  ['Ruination Metal Fest','Eigenes Festival','https://www.daysofruin.ch/ruination-metal-fest'],
+  ['Booking','booking@daysofruin.ch','mailto:booking@daysofruin.ch']
+];
+
+const esc = s => String(s ?? '').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const safeUrl = u => /^(https?:|mailto:)/.test(String(u||'')) ? String(u) : '';
+const dp = iso => { const d=new Date(iso+'T12:00:00'); return {d:String(d.getDate()).padStart(2,'0'), m:MONTHS[d.getMonth()], mm:String(d.getMonth()+1).padStart(2,'0'), y:String(d.getFullYear()), w:WEEKDAYS[d.getDay()]}; };
+const fmt = iso => { const p=dp(iso); return `${p.d}.${p.mm}.${p.y}`; };
+
+/* past shows, grouped by year */
+(function(){
+  let html='', year='';
+  for(const g of past){
+    const p = dp(g.date);
+    if(p.y!==year){ year=p.y; html += `<div class="yearhead">${year}</div>`; }
+    html += `<div class="gig past">
+      <div class="d"><b>${p.d}</b><span>${p.m}</span></div>
+      <div>
+        <h3>${esc(g.t)}</h3>
+        <div class="v">${esc(g.v||'')}</div>
+        ${g.w?`<div class="with">mit ${esc(g.w)}</div>`:''}
+        ${g.note?`<div class="with">${esc(g.note)}</div>`:''}
+        ${(g.hot||g.own)?`<div class="tags">${g.hot?`<span class="chip hot">${esc(g.hot)}</span>`:''}${g.own?'<span class="chip own">Eigenes Festival</span>':''}</div>`:''}
+      </div>
+      ${g.fl?`<div class="fl">${g.fl.map(f=>`<img src="img/${f}" alt="Flyer" data-cap="${esc(flyerCaps[f]||'')}" class="zoomimg">`).join('')}</div>`:''}
+    </div>`;
+  }
+  document.getElementById('past').innerHTML = html;
+})();
+
+document.getElementById('flyers').innerHTML = Object.entries(flyerCaps).map(([f,c])=>`<button class="zoom" data-src="img/${f}" data-cap="${esc(c)}"><figure><img src="img/${f}" alt="${esc(c)}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure></button>`).join('');
+document.getElementById('photos').innerHTML = photos.map(([f,c])=>`<button class="zoom" data-src="img/${f}" data-cap="${esc(c)}"><figure><img src="img/${f}" alt="${esc(c)}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure></button>`).join('');
+document.getElementById('shop').innerHTML = shop.map(([f,n,p])=>`<a class="item" href="https://eef893.myshopify.com/" target="_blank" rel="noopener"><img src="img/${f}" alt="${esc(n)}" loading="lazy"><div class="t"><b>${esc(n)}</b><div class="p">CHF ${p}</div></div></a>`).join('');
+document.getElementById('alllinks').innerHTML = links.map(l=>`<a href="${l[2]}" target="_blank" rel="noopener">${esc(l[0])} <small>${esc(l[1])}</small></a>`).join('');
+
+/* live data */
+let countdownTimer = null;
+const gigTime = g => new Date(`${g.date}T${g.time||'20:00'}:00+01:00`).getTime();
+
+function renderUpcoming(list, meta){
+  const box = document.getElementById('upcoming');
+  const now = Date.now();
+  const gigs = (list||[]).filter(g=>g.date && gigTime(g) > now - 6*36e5).sort((a,b)=>a.date.localeCompare(b.date));
+  box.innerHTML = gigs.length ? gigs.map(g=>{
+    const p = dp(g.date);
+    const tags=[];
+    if(safeUrl(g.tickets)) tags.push(`<a class="chip hot" href="${safeUrl(g.tickets)}" target="_blank" rel="noopener">Tickets</a>`);
+    if(safeUrl(g.url)) tags.push(`<a class="chip" href="${safeUrl(g.url)}" target="_blank" rel="noopener">Details</a>`);
+    return `<div class="gig">
+      <div class="d"><b>${p.d}</b><span>${p.m}</span><i>${p.y}</i></div>
+      <div>
+        <h3>${esc(g.title)}</h3>
+        <div class="v">${esc([g.venue,g.city].filter(Boolean).join(', '))}${g.time?` · ${p.w} ${esc(g.time)}`:''}</div>
+        ${g.lineup?`<div class="with">mit ${esc(g.lineup)}</div>`:''}
+        ${g.note?`<div class="with">${esc(g.note)}</div>`:''}
+        <div class="tags">${tags.join('')}</div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Zurzeit sind keine Shows angekündigt. Neue Daten erscheinen hier automatisch.</div>';
+  renderNext(gigs[0]||null);
+  const badge = document.getElementById('livebadge');
+  badge.textContent = gigs[0] ? `Next: ${dp(gigs[0].date).d}.${dp(gigs[0].date).mm}. ${gigs[0].city||''}`.trim() : '';
+  const st = document.getElementById('stamp-upcoming');
+  st.textContent = meta; st.className = 'stamp' + (meta.startsWith('Live') ? ' live' : '');
+}
+
+function renderNext(g){
+  const el = document.getElementById('next');
+  if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
+  if(!g){
+    el.innerHTML = `<div class="body"><div class="kick">Nächste Show</div><h3>Noch nichts angekündigt</h3><div class="venue">Neue Daten erscheinen hier automatisch, sobald die Band sie veröffentlicht.</div><div class="btns" style="margin-top:16px"><a class="btn ghost" href="https://www.bandsintown.com/a/1494782" target="_blank" rel="noopener">Bandsintown folgen</a></div></div>`;
+    return;
+  }
+  const p = dp(g.date);
+  const btns=[];
+  if(safeUrl(g.tickets)) btns.push(`<a class="btn primary" href="${safeUrl(g.tickets)}" target="_blank" rel="noopener">Tickets</a>`);
+  if(safeUrl(g.url)) btns.push(`<a class="btn ghost" href="${safeUrl(g.url)}" target="_blank" rel="noopener">Details</a>`);
+  btns.push(`<a class="btn ghost" href="#konzerte" data-go="konzerte">Alle Shows</a>`);
+  el.innerHTML = `<div class="body">
+    <div class="kick">Nächste Show</div>
+    <div class="day"><span class="d">${p.d}</span><span class="m">${p.m}</span><span class="y">${p.y}${g.time?` · ${p.w} ${esc(g.time)}`:''}</span></div>
+    <h3>${esc(g.title)}</h3>
+    <div class="venue">${esc([g.venue,g.city].filter(Boolean).join(', '))}${g.lineup?` · mit ${esc(g.lineup)}`:''}</div>
+    <div class="count" id="count" aria-label="Countdown"></div>
+    <div class="btns">${btns.join('')}</div>
+  </div>`;
+  const target = gigTime(g), cEl = document.getElementById('count');
+  const tick = () => {
+    const ms = target - Date.now();
+    if(ms<=0){ cEl.innerHTML='<div><b>Heute</b><span>Live</span></div>'; return; }
+    const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4);
+    cEl.innerHTML=`<div><b>${d}</b><span>Tage</span></div><div><b>${h}</b><span>Std</span></div><div><b>${m}</b><span>Min</span></div>`;
+  };
+  tick(); countdownTimer = setInterval(tick, 30000);
+}
+
+function renderNews(list, meta){
+  const box = document.getElementById('news');
+  const items = (list||[]).slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,8);
+  box.innerHTML = items.map(n=>{
+    const href = safeUrl(n.url), tag = href ? 'a' : 'div';
+    return `<${tag} class="item-news" ${href?`href="${href}" target="_blank" rel="noopener"`:''}>
+      <div class="when">${fmt(n.date)}${n.source?` · ${esc(n.source)}`:''}</div>
+      <h3>${esc(n.title)}</h3>${n.text?`<p>${esc(n.text)}</p>`:''}
+    </${tag}>`;
+  }).join('') || '<div class="empty">Noch keine Neuigkeiten.</div>';
+  const st = document.getElementById('stamp-news');
+  st.textContent = meta; st.className = 'stamp' + (meta.startsWith('Live') ? ' live' : '');
+}
+
+function bitToGig(e){
+  const dt = String(e.datetime||''), v = e.venue||{};
+  const lineup = (e.lineup||[]).filter(Boolean).join(', ');
+  const offer = (e.offers||[]).find(o=>o.type==='Tickets' && o.url);
+  return {date:dt.slice(0,10), time:dt.slice(11,16), title:String(e.title||'').trim() || lineup || 'Days of Ruin live',
+    venue:v.name||'', city:[v.city, v.country && v.country!=='Switzerland' ? v.country : ''].filter(Boolean).join(', '),
+    lineup, note:'', tickets: offer ? offer.url : '', url: e.url||''};
+}
+
+async function loadFeed(){
+  const cached = (()=>{ try{ return JSON.parse(localStorage.getItem('dor-feed')||'null'); }catch(e){ return null; } })();
+  let feed = cached || bundled;
+  let meta = cached ? `Stand ${fmt(cached.updated||bundled.updated)}` : `Stand ${fmt(bundled.updated)} · gebündelt`;
+  renderUpcoming(feed.upcoming, meta); renderNews(feed.news, meta);
+
+  const jobs = [];
+  jobs.push(fetch(FEED_URL + '?t=' + Date.now(), {cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{
+    if(j && Array.isArray(j.upcoming) && Array.isArray(j.news)){
+      feed = j; try{ localStorage.setItem('dor-feed', JSON.stringify(j)); }catch(e){}
+      meta = `Live · Feed vom ${fmt(j.updated||bundled.updated)}`;
+      if(j.message) meta += ' · ' + j.message;
+      renderNews(j.news, meta); renderUpcoming(j.upcoming, meta);
+    }
+  }).catch(()=>{}));
+  jobs.push(fetch(BIT_URL, {cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(events=>{
+    if(!Array.isArray(events)) return;
+    const live = events.map(bitToGig).filter(g=>g.date);
+    const merged = live.map(g=>{ const f=(feed.upcoming||[]).find(x=>x.date===g.date); return f ? {...g, ...Object.fromEntries(Object.entries(f).filter(([k,v])=>v))} : g; });
+    for(const f of feed.upcoming||[]) if(!merged.find(g=>g.date===f.date)) merged.push(f);
+    renderUpcoming(merged, 'Live · Bandsintown ' + new Date().toLocaleDateString('de-CH'));
+  }).catch(()=>{}));
+  await Promise.allSettled(jobs);
+}
+loadFeed();
+window.addEventListener('app-active', ()=>loadFeed());
+
+/* Bandcamp players */
+function loadPlayers(scope){
+  scope.querySelectorAll('.player:not(.loaded)').forEach(p=>{
+    const f = document.createElement('iframe');
+    f.src = `https://bandcamp.com/EmbeddedPlayer/album=${p.dataset.album}/size=large/bgcol=131315/linkcol=a3ff12/tracklist=false/artwork=none/transparent=true/`;
+    f.title = `Bandcamp-Player: ${p.dataset.title}`;
+    f.setAttribute('seamless','');
+    f.setAttribute('allow','autoplay; encrypted-media');
+    f.addEventListener('load', ()=>p.classList.add('loaded'));
+    p.appendChild(f);
+  });
+}
+
+/* navigation */
+const views = [...document.querySelectorAll('.view')], navBtns=[...document.querySelectorAll('.nav button')];
+function go(v, push=true){
+  if(!document.getElementById('v-'+v)) v='start';
+  views.forEach(s=>s.classList.toggle('active', s.id==='v-'+v));
+  navBtns.forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  if(push) history.replaceState(null,'','#'+v);
+  window.scrollTo({top:0});
+  loadPlayers(document.getElementById('v-'+v));
+}
+navBtns.forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
+document.addEventListener('click',e=>{ const a=e.target.closest('[data-go]'); if(a){ e.preventDefault(); go(a.dataset.go); } });
+window.addEventListener('hashchange',()=>go(location.hash.slice(1),false));
+go(location.hash.slice(1)||'start',false);
+
+/* lightbox */
+const lb=document.getElementById('lb'), lbImg=lb.querySelector('img'), lbCap=lb.querySelector('.cap');
+function openLb(src,cap){lbImg.src=src;lbImg.alt=cap;lbCap.textContent=cap;lb.classList.add('open')}
+document.addEventListener('click',e=>{
+  const z=e.target.closest('.zoom'); if(z){openLb(z.dataset.src,z.dataset.cap||'');return}
+  const zi=e.target.closest('.zoomimg'); if(zi){openLb(zi.src,zi.dataset.cap||'');return}
+  if(e.target.closest('#lb')) lb.classList.remove('open');
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('open')});
+</script>
+</body>
+</html>
