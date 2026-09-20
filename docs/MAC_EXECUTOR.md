@@ -42,6 +42,21 @@ Startet den Workflow `burgys-ios-build.yml` im App-Repo per
 `workflow_dispatch`, verfolgt den Run und holt die IPA. Kostenlos fuer
 oeffentliche Repos (`COST_MODEL.md`).
 
+Beim Abholen des Artefakts gibt es zwei Fallen, die beide abgeraeumt sind:
+
+- **Das Token darf nicht mitwandern.** GitHub antwortet auf den
+  Download-Endpunkt mit einer 302 auf einen *anderen* Host (eine vorsignierte
+  URL, die keine Zugangsdaten braucht). `urllib` wuerde der Umleitung folgen
+  und den `Authorization`-Header brav mitschicken - also das Token an den
+  Umleitungsempfaenger aushaendigen. Buergys Builds folgt der Umleitung
+  deshalb selbst und laedt den Blob **ohne jede Zugangsdaten**. Ein Test
+  prueft, dass am Blob-Host kein `Authorization` ankommt.
+- **Das Zip kommt aus dem Netz.** Jeder Eintragsname wird geprueft
+  (`..`, fuehrender `/`, Laufwerksbuchstaben), die entpackte Groesse und die
+  Anzahl der Eintraege sind gedeckelt, und die IPA wird gegen die
+  `.sha256`-Datei geprueft, die der Workflow daneben legt - das faengt einen
+  abgebrochenen Download, bevor er als kaputte Signatur auffaellt.
+
 Konfiguration in `config/projects.json`:
 
 ```json

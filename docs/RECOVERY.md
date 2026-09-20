@@ -78,8 +78,25 @@ gemeldet statt angefangen. Das Dashboard zeigt `OK` / `WARN` (unter 10 GiB) /
 `CRITICAL`.
 
 Konfigurierbare Aufbewahrung: `retention_days_builds`, `retention_days_logs`,
-`retention_keep_artifacts_per_project`. Das automatische Aufraeumen ist noch
-nicht implementiert - offener Punkt BB-I-002.
+`retention_keep_artifacts_per_project`.
+
+```
+burgys retention            # zeigt nur an, loescht nichts
+burgys retention --apply    # raeumt wirklich auf
+burgys retention --verbose  # zeigt auch, was warum behalten wird
+```
+
+Standardmaessig wird **nichts** geloescht - `--apply` ist Pflicht. Niemals
+angefasst werden:
+
+- Builds, die noch laufen
+- Alles, wozu eine **OTA-Veroeffentlichung** existiert. Deren Installationsseite
+  zeigt per URL und Pruefsumme auf genau dieses Artefakt; es zu loeschen wuerde
+  eine funktionierende Installation kaputtmachen.
+- Die neuesten `retention_keep_artifacts_per_project` Artefakte je Projekt,
+  unabhaengig vom Alter.
+
+Das Dashboard zeigt unter *Speicher*, wie viel ein Aufraeumen freigeben wuerde.
 
 ## Was zu tun ist, wenn etwas kaputt aussieht
 

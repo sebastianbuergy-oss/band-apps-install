@@ -10,7 +10,7 @@ Nur bestaetigter Zustand. Was hier steht, ist nachgeprueft.
 ## Was steht
 
 - Buergys Builds v0.1 unter `burgys-builds/` - **IMPLEMENTED und TESTED**
-  (186 automatische Tests, gruen, reine Standardbibliothek)
+  (223 automatische Tests, gruen, 0 uebersprungen, reine Standardbibliothek)
 - Phase-1-Review durch Codex abgeschlossen: 14 Befunde, alle behoben,
   35/35 Mutanten von der Suite gefunden (vorher 22/26)
 - Bestandsaufnahme: `docs/INVENTORY.md`
@@ -38,6 +38,8 @@ Nur bestaetigter Zustand. Was hier steht, ist nachgeprueft.
 | Runner-Allowlist | TESTED | nur `STANDARD_MACOS_RUNNERS` erlaubt; fehlendes Label und Larger Runner blockieren |
 | Workflow-Haertung | TESTED (statisch) | null `${{ }}` in `run:`-Blocks, Eingabevalidierung, geschuetzte Umgebung |
 | Mutationstests | TESTED | 35 Sicherungen kaputtgemacht, 35-mal Rot |
+| Artefakt-Download | TESTED | 24 Tests gegen einen Stub der Actions-API, inkl. Ende-zu-Ende-Lauf durch den Controller; Token leakt nicht an den Umleitungs-Host, Zip-Slip und Zip-Bombe abgewehrt |
+| Retention | TESTED | raeumt auf, laesst laufende Builds und veroeffentlichte OTA-Releases in Ruhe |
 | **Windows** | **UNGEPRUEFT** | Review lief unter Linux; `tests/windows_check.py` wartet auf den HP |
 | **Echter iOS-Build** | **NICHT ERREICHT** | kein Mac, kein freigegebener Executor |
 
@@ -57,8 +59,7 @@ Nur bestaetigter Zustand. Was hier steht, ist nachgeprueft.
    setzt die Nummer erst zur Laufzeit. Lokal gibt es **keine** Spur der an App
    Store Connect uebermittelten Nummern. Bleibt Blocker.
 5. **Rechner-Bestandsaufnahme fehlt.** `burgys doctor` auf dem HP laufen lassen.
-6. **BB-I-003:** `fetch_artifact` im GitHub-Executor fehlt - letzter Codeblocker
-   vor einem echten Build.
+6. ~~BB-I-003 `fetch_artifact`~~ - **erledigt.** Es gibt keinen Codeblocker mehr.
 
 ## Naechster Schritt
 
@@ -73,5 +74,5 @@ Sebastian:
 4. Entscheiden, ob der GitHub-Actions-Weg eingerichtet wird (`MAC_EXECUTOR.md`) -
    inklusive geschuetzter Umgebung `ios-signing` mit Required Reviewers
 
-Danach: BB-011 (`fetch_artifact`), dann BB-005 (Workflow einrichten) und
-BB-006 (erster echter Ad-Hoc-Build).
+Danach nur noch BB-005 (Workflow und geschuetzte Umgebung einrichten) und
+BB-006 (erster echter Ad-Hoc-Build). Code ist fertig.

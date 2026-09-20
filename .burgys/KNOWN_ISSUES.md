@@ -66,35 +66,30 @@ ueber eine unbekannte Methode, ist das die Ursache.
 
 ---
 
-## BB-I-002 - Aufbewahrung ist konfigurierbar, aber raeumt noch nicht auf
+## BB-I-002 - Aufbewahrung raeumte nicht auf
 
-**Offen. Aufgabe BB-008.**
+**BEHOBEN (Codex, 2026-09-20, BB-008).**
 
-`retention_days_builds`, `retention_days_logs` und
-`retention_keep_artifacts_per_project` stehen in der Konfiguration und werden
-bisher von nichts ausgewertet. `data/` waechst also.
-
-*Abgefedert durch:* Der Speicherwaechter blockiert unter 2 GiB frei, das
-Dashboard warnt unter 10 GiB, Build-Logs werden bei 8 MB abgeschnitten.
-
-*Risiko heute:* gering - ein Build erzeugt ein Manifest, ein Log und eine IPA von
-rund 5 MB.
+`bb/retention.py` wertet die Konfiguration jetzt aus. `burgys retention` zeigt
+an, `--apply` raeumt auf. Laufende Builds, veroeffentlichte OTA-Releases und die
+neuesten N Artefakte je Projekt werden nie angefasst. Das Dashboard zeigt, wie
+viel freizumachen waere. 13 Tests, alle Schutzregeln mutationsgeprueft.
 
 ---
 
-## BB-I-003 - `fetch_artifact` fehlt im GitHub-Executor
+## BB-I-003 - `fetch_artifact` fehlte im GitHub-Executor
 
-**Offen. Aufgabe BB-011. Blockiert BB-006.**
+**BEHOBEN (Codex, 2026-09-20, BB-011). Blockierte BB-006.**
 
-`GitHubMacExecutor` kann einen Workflow starten und seinen Zustand verfolgen,
-aber die IPA noch nicht herunterladen - `fetch_artifact` gibt `None` zurueck.
+Implementiert samt der beiden Fallen dieser API: das Token wandert nicht mit
+der 302-Umleitung zum Blob-Host, und das Zip aus dem Netz wird nicht
+vertraut (Pfadpruefung, Groessen- und Eintragsdeckel, SHA-256-Abgleich gegen
+die Sidecar-Datei).
 
-*Wie es sich aeussert:* Der Build endet mit "Executor meldet Erfolg, liefert aber
-keine IPA" und wird `FAILED`. Das ist korrekt (kein Artefakt ist kein Erfolg),
-aber nicht das Ziel.
-
-*Was fehlt:* `GET /repos/{repo}/actions/runs/{id}/artifacts`, dann das Zip laden
-und entpacken. Die Actions-API liefert Artefakte immer als Zip.
+24 Tests gegen einen lokalen Stub der Actions-API, darunter ein
+Ende-zu-Ende-Lauf durch den Controller: Dispatch, Poll, Download,
+IPA-Verifikation, OTA-Release mit QR. Damit ist der Weg vollstaendig - es
+fehlt nur noch ein echter Mac am anderen Ende.
 
 ---
 

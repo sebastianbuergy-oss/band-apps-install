@@ -22,6 +22,7 @@ from urllib.parse import parse_qs, urlparse
 
 from . import auth as AU
 from . import dashboard as DASH
+from . import retention  # noqa: F401  (used by _retention_summary)
 from . import states as S
 from .audit import API_DENIED
 from .builds import BuildController
@@ -336,7 +337,22 @@ def system_status(controller: BuildController) -> dict:
         "disk": disk_status(controller.paths.root,
                             int(controller.config["min_free_bytes"]),
                             int(controller.config["warn_free_bytes"])),
+        "retention": _retention_summary(controller),
     }
+
+
+def _retention_summary(controller) -> dict:
+    """What a cleanup would free, without doing anything."""
+    from . import retention
+
+    try:
+        result = retention.plan(controller.config, controller.paths).to_dict()
+    except Exception as exc:  # never let housekeeping break the status page
+        return {"error": type(exc).__name__}
+    return {"prunable_builds": len(result["builds"]),
+            "prunable_artifacts": len(result["artifacts"]),
+            "prunable_logs": len(result["logs"]),
+            "freed_mb": result["freed_mb"]}
 
 
 # --------------------------------------------------------------------------

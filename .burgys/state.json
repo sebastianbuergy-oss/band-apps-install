@@ -4,8 +4,8 @@
   "current_commit": "5d671825075cd47fc338dd503757499a519f9e67",
   "active_tasks": [
     "BB-013",
-    "BB-011",
-    "BB-007"
+    "BB-007",
+    "BB-005"
   ],
   "last_agent": "codex",
   "last_handoff": "2026-09-20 (CODEX review)",
@@ -18,7 +18,7 @@
     "project": "thy-gnosis",
     "acceptance_points_total": 17,
     "acceptance_points_done": 5,
-    "blocked_on": "Windows-Abnahme auf dem HP, dann Freigabe fuer den ersten echten macOS-Build"
+    "blocked_on": "Windows-Abnahme auf dem HP und Sebastians Freigabe - kein Codeblocker mehr offen"
   },
   "notes": "Cost Guard aktiv: PAID_SERVICES_ALLOWED=false, zusaetzlich Runner-Allowlist. Kein macOS-Executor freigegeben, daher keine echte IPA aus Buergys Builds. Windows nie ausgefuehrt.",
   "review": {
@@ -27,10 +27,14 @@
     "findings": 14,
     "fixed": 14,
     "tests_before": 137,
-    "tests_after": 186,
+    "tests_after": 223,
     "mutants_killed_before": "22/26",
     "mutants_killed_after": "35/35",
     "windows_verified": false,
-    "real_ios_build": false
+    "real_ios_build": false,
+    "follow_up_done": [
+      "BB-011 fetch_artifact",
+      "BB-008 retention"
+    ]
   }
 }

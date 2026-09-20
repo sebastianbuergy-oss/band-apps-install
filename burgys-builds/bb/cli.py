@@ -158,6 +158,31 @@ def cmd_status(args) -> int:
     return 0
 
 
+def cmd_retention(args) -> int:
+    from . import retention
+
+    controller = _controller(args)
+    result = retention.apply(controller.config, controller.paths,
+                             dry_run=not args.apply, audit=controller.audit)
+    if result["builds"] or result["artifacts"] or result["logs"]:
+        verb = "wuerde entfernen" if result["dry_run"] else "entfernt"
+        print(f"{verb}: {len(result['builds'])} Builds, "
+              f"{len(result['artifacts'])} Artefakte, {len(result['logs'])} Logs "
+              f"({result['freed_mb']} MB)")
+        for key in ("builds", "artifacts", "logs"):
+            for build_id in result[key][:20]:
+                print(f"  {key[:-1]:<9} {build_id}")
+        if result["dry_run"]:
+            print("\nNichts geloescht. Mit --apply ausfuehren.")
+    else:
+        print("Nichts aufzuraeumen.")
+    if args.verbose and result["kept"]:
+        print("\nBehalten:")
+        for build_id, reason in sorted(result["kept"].items()):
+            print(f"  {build_id}  {reason}")
+    return 0
+
+
 def cmd_recover(args) -> int:
     controller = _controller(args)
     _print(controller.queue.recover(controller.audit))
@@ -266,6 +291,12 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("projects", help="konfigurierte Projekte auflisten").set_defaults(fn=cmd_projects)
     sub.add_parser("status", help="Systemstatus als JSON").set_defaults(fn=cmd_status)
     sub.add_parser("recover", help="Queue nach einem Neustart aufraeumen").set_defaults(fn=cmd_recover)
+
+    p = sub.add_parser("retention", help="alte Builds, Logs und Artefakte aufraeumen")
+    p.add_argument("--apply", action="store_true",
+                   help="wirklich loeschen (ohne diese Option nur anzeigen)")
+    p.add_argument("--verbose", action="store_true", help="auch zeigen, was behalten wird")
+    p.set_defaults(fn=cmd_retention)
 
     p = sub.add_parser("preflight", help="Windows-Preflight fuer ein Projekt")
     p.add_argument("project")

@@ -4,6 +4,98 @@ Der jeweils letzte Eintrag steht oben.
 
 ---
 
+## 2026-09-20 - CODEX (Folgearbeit nach dem Review)
+
+**Agent:** CODEX
+**Rolle:** IMPLEMENTATION
+**Task-IDs:** BB-011, BB-008
+**Startcommit:** `58808d1` (Ende des Phase-1-Reviews)
+**Endcommit:** siehe Branch `codex/bb-011-fetch-artifact`
+**Basis:** `codex/bb-review-phase1` - die Review-Korrekturen werden gebraucht
+**Umgebung:** Linux-Container - **weiterhin kein Windows, kein Mac**
+
+### Was gemacht wurde
+
+**BB-011 - `fetch_artifact` im GitHub-Executor.** Der im Review als letzter
+Codeblocker markierte Punkt. Der Executor konnte starten und verfolgen, aber
+die IPA nicht abholen; ein erfolgreicher Lauf endete mit "Executor meldet
+Erfolg, liefert aber keine IPA".
+
+Diese API hat zwei Fallen, beide abgeraeumt:
+
+1. **Das Token wandert nicht mit.** GitHub antwortet auf den Download-Endpunkt
+   mit einer 302 auf einen *anderen* Host. `urllib` folgt der Umleitung
+   standardmaessig und schickt den `Authorization`-Header brav mit - haendigt
+   das Token also dem Umleitungsempfaenger aus. Buergys Builds folgt jetzt
+   selbst und laedt den Blob ohne jede Zugangsdaten. Ein Test prueft, dass am
+   Blob-Host kein `Authorization` ankommt.
+2. **Das Zip kommt aus dem Netz.** Eintragsnamen werden geprueft (`..`,
+   fuehrender `/`, Laufwerksbuchstaben), entpackte Groesse und Eintragszahl
+   sind gedeckelt, die IPA wird gegen die `.sha256`-Sidecar-Datei geprueft.
+
+**BB-008 - Retention.** Die Konfiguration nannte seit jeher eine
+Aufbewahrungsregel, durchgesetzt hat sie niemand; `data/` wuchs unbegrenzt.
+`bb/retention.py` setzt sie jetzt um. `burgys retention` zeigt nur an,
+`--apply` raeumt auf. Nie angefasst: laufende Builds, alles mit einer
+veroeffentlichten OTA-Freigabe (deren Installationsseite zeigt per URL und
+Pruefsumme genau darauf), und die neuesten N Artefakte je Projekt.
+
+### Tests
+
+**223 Tests, gruen, 0 uebersprungen** (vorher 186).
+
+- 24 neue Tests fuer den Artefakt-Download gegen einen lokalen Stub der
+  Actions-API, darunter ein **Ende-zu-Ende-Lauf durch den ganzen Controller**:
+  Dispatch, Poll, Download, IPA-Verifikation, OTA-Release mit QR-Code und
+  korrekt hochgezaehltem Build-Limit. Das ist der Beweis, dass BB-011
+  tatsaechlich BB-006 entsperrt.
+- 13 neue Tests fuer Retention.
+- Mutationsgeprueft wie im Review: 13 neue Sicherungen einzeln kaputtgemacht.
+
+Dabei zwei eigene Testschwaechen gefunden und behoben:
+
+- Die beiden Zip-Slip-Schranken (Namenspruefung und Containment) **maskierten
+  sich gegenseitig**: einzeln entfernt fiel keine auf, weil die andere
+  ansprang. Erst das Entfernen *beider* wurde bemerkt. Behoben, indem der Test
+  jetzt die konkrete Fehlermeldung prueft statt nur den Ausnahmetyp - damit ist
+  jede Schranke einzeln festgenagelt. Die zweite Schranke ist heute durch die
+  erste unerreichbar; sie bleibt als Reserve drin und ist im Code so
+  kommentiert.
+- Eine Zusicherung griff nach `/tmp` statt nur in den eigenen Testbaum und
+  konnte durch fremde Dateien gruen oder rot werden. Eingegrenzt.
+
+Endstand: 13/13 neue Mutanten gefunden, zusammen mit dem Review 48/48.
+
+### Gefundene Fehler
+
+Keine neuen im bestehenden Code. Die beiden bearbeiteten Punkte waren als
+BB-I-002 und BB-I-003 bereits bekannt und sind jetzt geschlossen.
+
+### Offene Blocker
+
+Unveraendert, aber **einer weniger** - es gibt keinen Codeblocker mehr:
+
+1. **Windows-Abnahme steht aus.** `python tests\windows_check.py` auf dem HP.
+2. **Kein macOS-Executor freigegeben** - Sebastians Entscheidung, plus die
+   geschuetzte Umgebung `ios-signing`.
+3. **`build_number_floor` unbekannt** - nur aus App Store Connect zu holen.
+4. **`local_path`** fehlt fuer beide Projekte.
+
+### Empfohlener naechster Schritt
+
+Unveraendert bei Sebastian: Windows-Abnahme, `build_number_floor`, dann die
+Entscheidung ueber den GitHub-Weg. Auf der Codeseite ist alles bereit.
+
+Falls noch etwas Freies gewuenscht ist, waere BB-009 (`ota_publish_dir` plus
+`burgys publish`) der naechste sinnvolle Schritt - er macht aus dem heutigen
+Kopieren von Hand einen Befehl, ohne die Live-Seite automatisch anzufassen.
+
+**STOPP weiterhin eingehalten:** kein echter macOS-Build, kein kostenpflichtiger
+Dienst, kein App-Store-Upload, keine Zertifikate oder Profile veraendert, kein
+Codemagic-Workflow angefasst, keine IPA ersetzt.
+
+---
+
 ## 2026-09-20 - CODEX (Review)
 
 **Agent:** CODEX
