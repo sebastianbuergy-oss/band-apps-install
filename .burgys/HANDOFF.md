@@ -9,7 +9,7 @@ Der jeweils letzte Eintrag steht oben.
 **Agent:** CODEX
 **Rolle:** REVIEW (unabhaengiger Code-, Security-, CI/CD- und Test-Reviewer)
 **Startcommit:** `514ba0f`
-**Endcommit:** siehe Branch `codex/bb-review-phase1`
+**Endcommit:** `5d67182` (Branch `codex/bb-review-phase1`)
 **Umgebung:** Linux-Container, Python 3.11.15 - **kein Windows, kein Mac**
 
 ### Tests
