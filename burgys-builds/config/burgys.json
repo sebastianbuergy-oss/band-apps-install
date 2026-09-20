@@ -1,0 +1,8 @@
+{
+  "paid_services_allowed": false,
+  "max_real_builds_per_project_per_day": 20,
+  "require_approval_for_mac_builds": true,
+  "require_approval_for_app_store_upload": true,
+  "default_executor": "none",
+  "ota_base_url": "https://sebastianbuergy-oss.github.io/band-apps-install"
+}

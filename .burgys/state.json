@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "project": "burgys-builds",
+  "current_commit": "",
+  "active_tasks": [],
+  "last_agent": "claude",
+  "last_handoff": "2026-09-20",
+  "system_status": {
+    "windows_controller": "IMPLEMENTED_NOT_YET_RUN_ON_HP",
+    "mac_executor": "NONE",
+    "cost_guard": true
+  },
+  "pilot": {
+    "project": "thy-gnosis",
+    "acceptance_points_total": 17,
+    "acceptance_points_done": 5,
+    "blocked_on": "Freigabe fuer den ersten echten macOS-Build"
+  },
+  "notes": "Cost Guard aktiv: PAID_SERVICES_ALLOWED=false. Kein macOS-Executor freigegeben, daher noch keine echte IPA aus Buergys Builds."
+}

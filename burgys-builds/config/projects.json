@@ -1,0 +1,106 @@
+[
+  {
+    "id": "thy-gnosis",
+    "name": "Thy Gnosis",
+    "code": "TG",
+    "repository": "https://github.com/sebastianbuergy-oss/thy-gnosis-ios",
+    "branch": "main",
+    "local_path": "",
+    "kind": "xcodegen-webview",
+    "bundle_id": "com.sebastianbuergy.thygnosis",
+    "scheme": "ThyGnosis",
+    "xcodeproj": "ThyGnosis.xcodeproj",
+    "display_name": "Thy Gnosis",
+    "marketing_version": "1.0",
+    "team_id": "38A4N26LD5",
+    "preflight_command": ["npm", "run", "check"],
+    "required_files": [
+      "project.yml",
+      "codemagic.yaml",
+      "feed/feed.json",
+      "web/index.html",
+      "web/fonts/fonts.css",
+      "App/AppDelegate.swift",
+      "App/WebViewController.swift",
+      "App/PrivacyInfo.xcprivacy",
+      "App/Assets.xcassets/AppIcon.appiconset/Icon-1024.png"
+    ],
+    "signing": {
+      "AD_HOC": {
+        "profile_name": "ThyGnosis ios_app_adhoc 20260913",
+        "certificate_common_name": "Apple Distribution: Sebastian Brgy (38A4N26LD5)",
+        "expires": "2027-08-14",
+        "certificate_expires": "2027-08-14",
+        "expects_provisioned_devices": true
+      },
+      "APP_STORE_RELEASE": {
+        "profile_name": "ThyGnosis ios_app_store 20260912",
+        "certificate_common_name": "Apple Distribution: Sebastian Brgy (38A4N26LD5)",
+        "expects_provisioned_devices": false,
+        "app_store_apple_id": "6811436478"
+      }
+    },
+    "ota": {
+      "slug": "thy-gnosis",
+      "title": "Thy Gnosis",
+      "plist": "thy-gnosis.plist",
+      "ipa": "thy-gnosis.ipa",
+      "icon": "thy-gnosis-icon.png"
+    },
+    "modes": ["AD_HOC", "APP_STORE_RELEASE"],
+    "migration_state": "CODEMAGIC_ACTIVE",
+    "enabled": true
+  },
+  {
+    "id": "days-of-ruin",
+    "name": "Days of Ruin",
+    "code": "DOR",
+    "repository": "https://github.com/sebastianbuergy-oss/days-of-ruin-ios",
+    "branch": "main",
+    "local_path": "",
+    "kind": "xcodegen-webview",
+    "bundle_id": "com.sebastianbuergy.daysofruin",
+    "scheme": "DaysOfRuin",
+    "xcodeproj": "DaysOfRuin.xcodeproj",
+    "display_name": "Days of Ruin",
+    "marketing_version": "1.0",
+    "team_id": "38A4N26LD5",
+    "preflight_command": ["npm", "run", "check"],
+    "required_files": [
+      "project.yml",
+      "codemagic.yaml",
+      "feed/feed.json",
+      "web/index.html",
+      "web/fonts/fonts.css",
+      "App/AppDelegate.swift",
+      "App/WebViewController.swift",
+      "App/PrivacyInfo.xcprivacy",
+      "App/Assets.xcassets/AppIcon.appiconset/Icon-1024.png"
+    ],
+    "signing": {
+      "AD_HOC": {
+        "profile_name": "DaysOfRuin ios_app_adhoc 20260913",
+        "certificate_common_name": "Apple Distribution: Sebastian Brgy (38A4N26LD5)",
+        "expires": "2027-08-14",
+        "certificate_expires": "2027-08-14",
+        "expects_provisioned_devices": true
+      },
+      "APP_STORE_RELEASE": {
+        "profile_name": "DaysOfRuin ios_app_store 20260912",
+        "certificate_common_name": "Apple Distribution: Sebastian Brgy (38A4N26LD5)",
+        "expects_provisioned_devices": false,
+        "app_store_apple_id": "6811437685"
+      }
+    },
+    "ota": {
+      "slug": "days-of-ruin",
+      "title": "Days of Ruin",
+      "plist": "days-of-ruin.plist",
+      "ipa": "days-of-ruin.ipa",
+      "icon": "days-of-ruin-icon.png"
+    },
+    "modes": ["AD_HOC", "APP_STORE_RELEASE"],
+    "migration_state": "CODEMAGIC_ACTIVE",
+    "enabled": true
+  }
+]

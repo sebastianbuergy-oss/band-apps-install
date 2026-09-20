@@ -1,0 +1,12 @@
+# Buergys Builds - Laufzeitdaten. Gehoeren nie ins Repository.
+burgys-builds/data/
+burgys-builds/**/__pycache__/
+*.pyc
+
+# Tokens und Schluessel gehoeren ausserhalb des Repos, aber doppelt genaeht:
+*.p12
+*.mobileprovision
+*.cer
+*.pem
+agent_token
+github_token
