@@ -39,6 +39,10 @@ class GitHubMacExecutor(MacExecutor):
         self.ref = self.config.get("ref") or "main"
         self.visibility = (self.config.get("visibility") or "").lower()
         self.token_file = self.config.get("token_file") or ""
+        #: The ``runs-on`` label the workflow uses.  The cost guard checks it
+        #: against its allowlist: a public repository is only free on a
+        #: *standard* runner.
+        self.runs_on = self.config.get("runs_on") or ""
         self._handles: dict[str, dict] = {}
 
     # -- cost ----------------------------------------------------------
@@ -92,8 +96,13 @@ class GitHubMacExecutor(MacExecutor):
         except urllib.error.URLError as exc:
             raise ExecutorUnavailable(f"GitHub nicht erreichbar: {exc.reason}") from None
 
+    @property
+    def runner_label(self) -> str:  # type: ignore[override]
+        return self.runs_on
+
     def configured(self) -> bool:
-        return bool(self.repo and self.token_file and Path(self.token_file).expanduser().exists())
+        return bool(self.repo and self.token_file
+                    and Path(self.token_file).expanduser().exists())
 
     # -- interface -----------------------------------------------------
     def availability(self) -> str:

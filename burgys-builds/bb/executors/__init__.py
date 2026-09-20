@@ -79,6 +79,9 @@ class MacExecutor(abc.ABC):
     cost_resource = "unknown"
     #: True only when a real Xcode toolchain runs.  A dry-run backend is False.
     produces_real_ipa = False
+    #: The ``runs-on`` label this executor's jobs land on, where that concept
+    #: exists.  The cost guard refuses a hosted runner it cannot name.
+    runner_label = ""
 
     def __init__(self, config: dict | None = None) -> None:
         self.config = dict(config or {})
@@ -106,6 +109,7 @@ class MacExecutor(abc.ABC):
             "name": self.name,
             "availability": self.availability(),
             "cost_resource": self.cost_resource,
+            "runner_label": self.runner_label,
             "produces_real_ipa": self.produces_real_ipa,
             "checked_at": _dt.datetime.now().isoformat(timespec="seconds"),
         }

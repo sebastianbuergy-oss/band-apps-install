@@ -62,14 +62,25 @@ class TokenStore:
             # Windows ignores POSIX modes; NTFS inheritance is the guard there.
             pass
 
-    def permissions_ok(self) -> bool:
+    def permissions_state(self) -> str:
+        """``"ok"``, ``"too-open"`` or ``"unchecked"``.
+
+        Windows ignores POSIX modes, so there is nothing for us to read
+        there.  Reporting "ok" in that case would be a claim we have not
+        earned - the file may well be readable by other local accounts - so
+        Windows gets an honest "unchecked" and the CLI says so.
+        """
         if os.name == "nt":
-            return True
+            return "unchecked"
         try:
             mode = stat.S_IMODE(self.path.stat().st_mode)
         except OSError:
-            return False
-        return not (mode & (stat.S_IRWXG | stat.S_IRWXO))
+            return "too-open"
+        return "ok" if not (mode & (stat.S_IRWXG | stat.S_IRWXO)) else "too-open"
+
+    def permissions_ok(self) -> bool:
+        """True only when we actually verified the mode and it was tight."""
+        return self.permissions_state() == "ok"
 
     def tokens(self) -> list:
         data = read_json(self.path, default=None)

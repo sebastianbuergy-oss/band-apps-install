@@ -75,6 +75,69 @@ def make_checkout(root: Path, *, bundle_id: str = "com.example.testapp",
     return root
 
 
+def make_ipa(path, *, bundle_id="com.example.testapp", version="1.0",
+             build_number="1", scheme="TestApp", team="TEAM123456",
+             profile_name="TestApp adhoc", devices=2, get_task_allow=False,
+             provisions_all_devices=False, signed=True, web=True,
+             expires="2099-01-01T00:00:00") -> Path:
+    """Build a synthetic .ipa that bb.ipa can read.
+
+    An IPA is a zip with a binary plist and a CMS blob whose payload is XML.
+    :func:`bb.ipa.inspect` slices the XML out rather than parsing CMS, so a
+    fixture only has to put a real plist where the real thing would be.  That
+    lets the verification tests run everywhere instead of only on a machine
+    that happens to have a 5 MB signed artifact lying next to the checkout.
+    """
+    import datetime
+    import plistlib
+    import zipfile
+
+    prefix = f"Payload/{scheme}.app/"
+    info = {
+        "CFBundleIdentifier": bundle_id,
+        "CFBundleName": scheme,
+        "CFBundleDisplayName": scheme,
+        "CFBundleShortVersionString": version,
+        "CFBundleVersion": build_number,
+        "CFBundleExecutable": scheme,
+        "MinimumOSVersion": "16.0",
+        "DTSDKName": "iphoneos26.5",
+        "ITSAppUsesNonExemptEncryption": False,
+    }
+    profile = {
+        "Name": profile_name,
+        "UUID": "00000000-0000-0000-0000-000000000000",
+        "TeamName": "Test Team",
+        "TeamIdentifier": [team],
+        "CreationDate": datetime.datetime(2026, 1, 1),
+        "ExpirationDate": datetime.datetime.fromisoformat(expires),
+        "Entitlements": {
+            "application-identifier": f"{team}.{bundle_id}",
+            "com.apple.developer.team-identifier": team,
+            "get-task-allow": get_task_allow,
+        },
+        "DeveloperCertificates": [b"not-a-real-certificate"],
+    }
+    if devices:
+        profile["ProvisionedDevices"] = [f"device{i:040d}" for i in range(devices)]
+    if provisions_all_devices:
+        profile["ProvisionsAllDevices"] = True
+    # Wrap the XML plist the way a .mobileprovision does: arbitrary bytes
+    # before and after, XML in the middle.
+    blob = b"\x30\x82CMS-ish-header" + plistlib.dumps(
+        profile, fmt=plistlib.FMT_XML) + b"trailing-signature-bytes"
+
+    path = Path(path)
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr(prefix + "Info.plist", plistlib.dumps(info, fmt=plistlib.FMT_BINARY))
+        z.writestr(prefix + "embedded.mobileprovision", blob)
+        if signed:
+            z.writestr(prefix + "_CodeSignature/CodeResources", "<plist/>")
+        if web:
+            z.writestr(prefix + "web/index.html", "<p>hallo</p>")
+    return path
+
+
 class ControllerCase(unittest.TestCase):
     """Base class giving every test its own data root and checkout."""
 

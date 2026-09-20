@@ -1,5 +1,6 @@
 """Storage, redaction, ids, manifests, audit log and concurrency."""
 import json
+import os
 import threading
 import unittest
 
@@ -103,6 +104,26 @@ class TestStore(ControllerCase):
                 safe_child(self.tmp, bad)
         self.assertTrue(str(safe_child(self.tmp, "ok.json")).startswith(str(self.tmp)))
 
+    @unittest.skipUnless(hasattr(os, "symlink"), "no symlinks on this platform")
+    def test_a_symlink_that_escapes_the_root_is_refused(self):
+        """The component checks pass here - only the containment check catches it.
+
+        A single plain name, no dots, no separators: everything the per-part
+        validation looks at is fine. It is resolving the symlink that reveals
+        the target sits outside the root, which is exactly what the final
+        containment check is for.
+        """
+        outside = self.tmp / "outside"
+        outside.mkdir()
+        root = self.tmp / "root"
+        root.mkdir()
+        try:
+            os.symlink(outside, root / "escape")
+        except (OSError, NotImplementedError) as exc:   # Windows without privilege
+            self.skipTest(f"cannot create a symlink here: {exc}")
+        with self.assertRaises(ValidationError):
+            safe_child(root, "escape")
+
     def test_sha256_matches_hashlib(self):
         import hashlib
 
@@ -127,6 +148,86 @@ class TestStore(ControllerCase):
                 FileLock(self.tmp / ".held.lock", timeout=0.3).acquire()
         finally:
             held.release()
+
+
+class TestAtomicWriteRetries(ControllerCase):
+    """Windows refuses to replace a file another process has open."""
+
+    def test_a_transient_replace_failure_is_retried(self):
+        import errno
+        from unittest import mock
+
+        from bb.store import write_json
+
+        calls = {"n": 0}
+        real = os.replace
+
+        def flaky(src, dst):
+            calls["n"] += 1
+            if calls["n"] < 3:
+                raise OSError(errno.EACCES, "file is open in another process")
+            return real(src, dst)
+
+        with mock.patch("bb.store.REPLACE_BACKOFF", 0.001), \
+                mock.patch("os.replace", side_effect=flaky):
+            write_json(self.tmp / "retried.json", {"ok": True})
+        self.assertEqual(read_json(self.tmp / "retried.json"), {"ok": True})
+        self.assertEqual(calls["n"], 3)
+
+    def test_a_permanent_replace_failure_still_raises_and_cleans_up(self):
+        import errno
+        from unittest import mock
+
+        from bb.errors import StorageError
+        from bb.store import write_json
+
+        with mock.patch("bb.store.REPLACE_BACKOFF", 0.001), \
+                mock.patch("os.replace",
+                           side_effect=OSError(errno.EACCES, "locked forever")):
+            with self.assertRaises(StorageError):
+                write_json(self.tmp / "never.json", {"a": 1})
+        self.assertFalse(list(self.tmp.glob("never.json*")),
+                         "no temp file may be left behind")
+
+    def test_a_non_transient_error_is_not_retried(self):
+        import errno
+        from unittest import mock
+
+        from bb.errors import DiskFull
+        from bb.store import write_json
+
+        with mock.patch("os.replace",
+                        side_effect=OSError(errno.ENOSPC, "no space")):
+            with self.assertRaises(DiskFull):
+                write_json(self.tmp / "full.json", {"a": 1})
+
+
+class TestTokenFilePermissions(ControllerCase):
+    def test_permission_state_is_honest_about_windows(self):
+        """Reporting "ok" on Windows would be a claim we have not checked."""
+        import os as _os
+        from unittest import mock
+
+        from bb.auth import TokenStore
+
+        store = TokenStore(self.tmp / "tok.json")
+        store.ensure()
+        self.assertEqual(store.permissions_state(), "ok")
+        self.assertTrue(store.permissions_ok())
+        with mock.patch.object(_os, "name", "nt"):
+            self.assertEqual(store.permissions_state(), "unchecked")
+            self.assertFalse(store.permissions_ok(),
+                             "unchecked must not read as verified")
+
+    def test_a_world_readable_token_file_is_reported(self):
+        import stat as _stat
+
+        from bb.auth import TokenStore
+
+        store = TokenStore(self.tmp / "loose.json")
+        store.ensure()
+        os.chmod(store.path, 0o644)
+        self.assertEqual(store.permissions_state(), "too-open")
 
 
 class TestManifest(ControllerCase):

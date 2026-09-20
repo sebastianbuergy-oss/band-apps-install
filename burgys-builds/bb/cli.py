@@ -41,8 +41,13 @@ def cmd_init(args) -> int:
     store.ensure()
     print(f"Datenverzeichnis : {controller.paths.root}")
     print(f"Tokendatei       : {store.path} {'(neu angelegt)' if created else '(vorhanden)'}")
-    if not store.permissions_ok():
+    state = store.permissions_state()
+    if state == "too-open":
         print("  WARNUNG: die Tokendatei ist nicht nur fuer den Besitzer lesbar.")
+    elif state == "unchecked":
+        print("  HINWEIS: Dateirechte unter Windows nicht geprueft. Wenn mehrere "
+              "Konten den PC nutzen, die Datei per Eigenschaften > Sicherheit "
+              "auf den eigenen Benutzer beschraenken.")
     print(f"Projekte         : {len(controller.registry)} konfiguriert")
     print(f"Cost Guard       : PAID_SERVICES_ALLOWED="
           f"{str(controller.cost_guard.allowed).lower()}")

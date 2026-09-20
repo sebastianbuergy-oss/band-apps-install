@@ -151,6 +151,10 @@ Aufgefallen beim Vergleich von Repo-Stand und ausgelieferter IPA:
    anderen Stand als wer sie im Browser oeffnet** - ohne Countdown in Schweizer
    Zeit, ohne die groesseren Tipp-Flaechen, ohne den Offline-Hinweis im Player.
 
+   **Days of Ruin ist genauso betroffen** (im Review unabhaengig nachgerechnet):
+   IPA 63'817 B / `960944f2c37d8aaa`, Repo auf `58400f7` 65'885 B /
+   `8850e7afb71da8c4`, Browser-Version 66'132 B / `b336f3c01e21c4f6`.
+
    Und: weder die `.plist`, noch die Installationsseite, noch die IPA selbst
    sagen, aus welchem Commit sie stammt. Genau diese Luecke schliesst das
    Build-Manifest (`commit`, `artifact_sha256`) und die neue Installationsseite,

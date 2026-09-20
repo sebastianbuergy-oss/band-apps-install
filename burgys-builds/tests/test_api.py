@@ -144,6 +144,69 @@ class TestRateLimit(ApiCase):
         self.assertIn(429, codes)
 
 
+class TestHostHeader(ApiCase):
+    """DNS-rebinding hardening: only localhost Host headers are answered."""
+
+    def test_a_foreign_host_header_is_refused(self):
+        for host in ("evil.example.com", "evil.example.com:8787", "attacker.test"):
+            status, _ = self.call("GET", "/health", headers={"Host": host})
+            self.assertEqual(status, 403, host)
+
+    def test_localhost_host_headers_are_accepted(self):
+        for host in (f"127.0.0.1:{self.port}", "localhost", f"localhost:{self.port}"):
+            status, _ = self.call("GET", "/health", headers={"Host": host})
+            self.assertEqual(status, 200, host)
+
+    def test_a_foreign_host_cannot_reach_an_authenticated_route_either(self):
+        status, _ = self.call("GET", "/status", self.tokens["agent"],
+                              headers={"Host": "evil.example.com"})
+        self.assertEqual(status, 403)
+
+
+class TestRateLimitIsPerIdentity(ApiCase):
+    config_overrides = {"api_rate_limit_per_minute": 6}
+
+    def test_one_noisy_token_does_not_lock_out_the_other(self):
+        """Every caller is 127.0.0.1, so keying on the address alone would let
+        the agent starve the dashboard."""
+        codes = [self.call("GET", "/status", self.tokens["agent"])[0]
+                 for _ in range(12)]
+        self.assertIn(429, codes, "the noisy token should hit its own limit")
+        self.assertEqual(
+            self.call("GET", "/status", self.tokens["release"])[0], 200,
+            "the second token must still get through")
+
+
+class TestSocketBinding(ApiCase):
+    def test_the_server_binds_only_to_loopback(self):
+        self.assertEqual(self.server.server_address[0], "127.0.0.1")
+
+    def test_a_non_local_host_is_refused_at_startup(self):
+        from bb.errors import ValidationError
+
+        from bb.api import serve
+        for host in ("0.0.0.0", "192.168.1.10", "::"):
+            with self.assertRaises(ValidationError, msg=host):
+                serve(self.controller, host, 0)
+
+    def test_address_reuse_is_disabled_on_windows(self):
+        """SO_REUSEADDR lets another local process steal the port on Windows,
+        and every request carries the agent's bearer token.
+
+        Asserted through the decision function rather than the running
+        server's attribute, so this holds the line on Linux too instead of
+        only failing on the one platform it protects.
+        """
+        import os
+
+        from bb.api import BurgysServer, reuse_address_default
+        self.assertFalse(reuse_address_default("nt"),
+                         "Windows must not set SO_REUSEADDR")
+        self.assertTrue(reuse_address_default("posix"))
+        self.assertEqual(BurgysServer.allow_reuse_address,
+                         reuse_address_default(os.name))
+
+
 class TestResponseHygiene(ApiCase):
     def test_no_secret_reaches_a_response(self):
         self.controller.audit.record("test", detail={"api_token": "ghp_supersecretvalue",

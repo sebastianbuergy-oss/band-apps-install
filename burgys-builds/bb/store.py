@@ -98,7 +98,7 @@ def write_json(path: str | os.PathLike, data: Any) -> Path:
             fh.write(payload)
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(tmp, p)
+        _replace_with_retry(tmp, p)
     except OSError as exc:
         _unlink(tmp)
         if exc.errno in (errno.ENOSPC, errno.EDQUOT):
@@ -108,6 +108,26 @@ def write_json(path: str | os.PathLike, data: Any) -> Path:
         _unlink(tmp)
         raise
     return p
+
+
+#: Windows refuses to replace a file another process currently has open, and
+#: virus scanners and indexers open freshly written files routinely.  The
+#: replacement is still atomic; it just occasionally has to wait a moment.
+REPLACE_ATTEMPTS = 5
+REPLACE_BACKOFF = 0.1
+
+
+def _replace_with_retry(src: str | os.PathLike, dst: str | os.PathLike) -> None:
+    transient = {errno.EACCES, errno.EPERM, getattr(errno, "EBUSY", None)}
+    for attempt in range(REPLACE_ATTEMPTS):
+        try:
+            os.replace(src, dst)
+            return
+        except OSError as exc:
+            last = attempt == REPLACE_ATTEMPTS - 1
+            if last or exc.errno not in transient:
+                raise
+            time.sleep(REPLACE_BACKOFF * (2 ** attempt))
 
 
 def _unlink(path: str | os.PathLike) -> None:

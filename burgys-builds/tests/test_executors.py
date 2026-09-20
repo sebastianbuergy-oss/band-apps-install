@@ -101,6 +101,66 @@ class TestBuildFailures(ControllerCase):
         self.assertIsNone(done.get("ota"))
 
 
+class TestApprovalGate(ControllerCase):
+    """Brief section 29: a real macOS build waits for Sebastian.
+
+    A mutation run showed this gate could be removed without any test
+    noticing, so it gets its own coverage.
+    """
+
+    config_overrides = {"require_approval_for_mac_builds": True}
+
+    def test_a_real_build_stops_at_waiting_approval(self):
+        manifest = self.controller.request_build(
+            "testapp", "AD_HOC", requested_by="agent")
+        self.assertEqual(manifest.status, S.WAITING_APPROVAL)
+
+    def test_an_unapproved_build_never_reaches_the_queue(self):
+        self.controller.request_build("testapp", "AD_HOC", requested_by="agent")
+        self.assertEqual(self.controller.queue.snapshot()["length"], 0)
+        self.assertIsNone(self.controller.run_next(poll_interval=0))
+
+    def test_a_dry_run_does_not_need_approval(self):
+        manifest = self.controller.request_build(
+            "testapp", "AD_HOC", requested_by="agent", dry_run=True)
+        self.assertEqual(manifest.status, S.QUEUED)
+
+    def test_approval_queues_it_and_is_recorded(self):
+        manifest = self.controller.request_build(
+            "testapp", "AD_HOC", requested_by="agent")
+        approved = self.controller.approve(manifest.build_id, "sebastian")
+        self.assertEqual(approved.status, S.QUEUED)
+        self.assertEqual(approved.get("approval")["by"], "sebastian")
+        self.assertEqual(self.controller.queue.snapshot()["length"], 1)
+        self.assertTrue([e for e in self.controller.audit.read(20)
+                         if e["action"] == "approval.granted"])
+
+    def test_approving_something_that_is_not_waiting_is_refused(self):
+        from bb.errors import ValidationError
+
+        manifest = self.controller.request_build(
+            "testapp", "AD_HOC", requested_by="agent", dry_run=True)
+        with self.assertRaises(ValidationError):
+            self.controller.approve(manifest.build_id, "sebastian")
+
+    def test_app_store_needs_approval_even_when_the_setting_is_off(self):
+        controller = self.rebuild_controller(
+            require_approval_for_mac_builds=False)
+        import json
+
+        from bb.projects import Project, Registry
+        data = json.loads(json.dumps(self.project_data))
+        data["build_number_floor"] = 50
+        data["signing"]["APP_STORE_RELEASE"] = {
+            "profile_name": "p", "expires": "2099-01-01",
+            "certificate_common_name": "Apple Distribution: Test (TEAM123456)",
+            "expects_provisioned_devices": False, "app_store_apple_id": "123"}
+        controller.registry = Registry([Project(data)])
+        manifest = controller.request_build(
+            "testapp", "APP_STORE_RELEASE", requested_by="agent")
+        self.assertEqual(manifest.status, S.WAITING_APPROVAL)
+
+
 class TestDiskFull(ControllerCase):
     def test_a_full_disk_blocks_a_request_before_anything_is_allocated(self):
         config = dict(self.config)

@@ -115,7 +115,7 @@ class BuildController:
         #    paid resource, so it is checked against the local machine.
         resource = "windows_local" if dry_run else executor.cost_resource
         try:
-            self.cost_guard.check(resource)
+            self.cost_guard.check(resource, runner_label=executor.runner_label)
         except CostGuardBlocked as exc:
             self.audit.record(A.COST_GUARD_BLOCKED, actor=requested_by,
                               project=project_id, executor=executor.name,
@@ -314,7 +314,7 @@ class BuildController:
             # The cost guard runs again here: minutes are about to be spent.
             resource = ("windows_local" if manifest.is_dry_run
                         else executor.cost_resource)
-            self.cost_guard.check(resource)
+            self.cost_guard.check(resource, runner_label=executor.runner_label)
 
             self._state(manifest, S.WAITING_MAC, f"Executor {executor.name}")
 

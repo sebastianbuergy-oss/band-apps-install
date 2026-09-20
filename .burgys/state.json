@@ -1,12 +1,16 @@
 {
   "schema_version": 1,
   "project": "burgys-builds",
-  "current_commit": "af84e28ed034736b476f4d896704eddc5ae5891a",
-  "active_tasks": [],
-  "last_agent": "claude",
-  "last_handoff": "2026-09-20",
+  "current_commit": "",
+  "active_tasks": [
+    "BB-013",
+    "BB-011",
+    "BB-007"
+  ],
+  "last_agent": "codex",
+  "last_handoff": "2026-09-20 (CODEX review)",
   "system_status": {
-    "windows_controller": "IMPLEMENTED_NOT_YET_RUN_ON_HP",
+    "windows_controller": "IMPLEMENTED_TESTED_ON_LINUX_UNVERIFIED_ON_WINDOWS",
     "mac_executor": "NONE",
     "cost_guard": true
   },
@@ -14,7 +18,19 @@
     "project": "thy-gnosis",
     "acceptance_points_total": 17,
     "acceptance_points_done": 5,
-    "blocked_on": "Freigabe fuer den ersten echten macOS-Build"
+    "blocked_on": "Windows-Abnahme auf dem HP, dann Freigabe fuer den ersten echten macOS-Build"
   },
-  "notes": "Cost Guard aktiv: PAID_SERVICES_ALLOWED=false. Kein macOS-Executor freigegeben, daher noch keine echte IPA aus Buergys Builds."
+  "notes": "Cost Guard aktiv: PAID_SERVICES_ALLOWED=false, zusaetzlich Runner-Allowlist. Kein macOS-Executor freigegeben, daher keine echte IPA aus Buergys Builds. Windows nie ausgefuehrt.",
+  "review": {
+    "phase": 1,
+    "agent": "codex",
+    "findings": 14,
+    "fixed": 14,
+    "tests_before": 137,
+    "tests_after": 186,
+    "mutants_killed_before": "22/26",
+    "mutants_killed_after": "35/35",
+    "windows_verified": false,
+    "real_ios_build": false
+  }
 }

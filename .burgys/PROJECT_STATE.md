@@ -3,14 +3,16 @@
 Nur bestaetigter Zustand. Was hier steht, ist nachgeprueft.
 
 **Stand:** 2026-09-20
-**Letzter Agent:** Claude (Lead)
-**Branch:** `claude/burgys-builds-ios-platform-k53703`
-**Start-Commit:** `fa99ef8`
+**Letzter Agent:** Codex (Review)
+**Branch:** `codex/bb-review-phase1` (auf `claude/burgys-builds-ios-platform-k53703`)
+**Start-Commit:** `514ba0f`
 
 ## Was steht
 
 - Buergys Builds v0.1 unter `burgys-builds/` - **IMPLEMENTED und TESTED**
-  (137 automatische Tests, gruen, reine Standardbibliothek)
+  (186 automatische Tests, gruen, reine Standardbibliothek)
+- Phase-1-Review durch Codex abgeschlossen: 14 Befunde, alle behoben,
+  35/35 Mutanten von der Suite gefunden (vorher 22/26)
 - Bestandsaufnahme: `docs/INVENTORY.md`
 - Zwoelf Dokumente unter `docs/`
 - Koordinationsdateien unter `.burgys/`
@@ -33,18 +35,30 @@ Nur bestaetigter Zustand. Was hier steht, ist nachgeprueft.
 | Agent API | TESTED | Auth, Scopes, Rate Limit, Path Traversal, Body-Grenze, Schwaerzung, Security-Header |
 | Log-Schwaerzung | TESTED | Schluesselnamen, PEM, `ghp_`-Token, lange Base64-Bloecke |
 | Disk-full | TESTED | blockiert vor der Vergabe, `ENOSPC` raeumt auf |
+| Runner-Allowlist | TESTED | nur `STANDARD_MACOS_RUNNERS` erlaubt; fehlendes Label und Larger Runner blockieren |
+| Workflow-Haertung | TESTED (statisch) | null `${{ }}` in `run:`-Blocks, Eingabevalidierung, geschuetzte Umgebung |
+| Mutationstests | TESTED | 35 Sicherungen kaputtgemacht, 35-mal Rot |
+| **Windows** | **UNGEPRUEFT** | Review lief unter Linux; `tests/windows_check.py` wartet auf den HP |
 | **Echter iOS-Build** | **NICHT ERREICHT** | kein Mac, kein freigegebener Executor |
 
 ## Offene Blocker
 
-1. **Kein macOS-Executor freigegeben.** Der GitHub-Weg ist vorbereitet und
+1. **Windows-Abnahme steht aus.** `python tests\windows_check.py` auf dem HP.
+   Weder Claude noch Codex konnten unter Windows ausfuehren - beide Sitzungen
+   liefen in Linux-Containern. Bis zur Ausgabe dieses Skripts gilt Buergys
+   Builds unter Windows als ungeprueft.
+2. **Kein macOS-Executor freigegeben.** Der GitHub-Weg ist vorbereitet und
    kostenlos (beide App-Repos sind oeffentlich), aber das Einrichten und der
    erste echte Lauf brauchen Sebastians Entscheidung - Auftrag Abschnitt 29.
-2. **`local_path` fehlt fuer beide Projekte.** Muss auf dem HP eingetragen
+3. **`local_path` fehlt fuer beide Projekte.** Muss auf dem HP eingetragen
    werden; von hier aus nicht bekannt.
-3. **`build_number_floor` unbekannt.** Blockiert `APP_STORE_RELEASE`, bis die
-   hoechste bereits verwendete Buildnummer aus App Store Connect bekannt ist.
-4. **Rechner-Bestandsaufnahme fehlt.** `burgys doctor` auf dem HP laufen lassen.
+4. **`build_number_floor` unbekannt.** Im Review gezielt gesucht: keine
+   Git-Tags, `project.yml` auf `1`, beide IPAs `CFBundleVersion 1`, Codemagic
+   setzt die Nummer erst zur Laufzeit. Lokal gibt es **keine** Spur der an App
+   Store Connect uebermittelten Nummern. Bleibt Blocker.
+5. **Rechner-Bestandsaufnahme fehlt.** `burgys doctor` auf dem HP laufen lassen.
+6. **BB-I-003:** `fetch_artifact` im GitHub-Executor fehlt - letzter Codeblocker
+   vor einem echten Build.
 
 ## Naechster Schritt
 
@@ -53,7 +67,11 @@ Sebastian:
 1. `docs/INVENTORY.md` lesen - besonders den Befund, dass die ausgelieferte
    iPhone-App einen Stand aelter ist als die Browser-Version
 2. Auf dem HP: `python -m bb.cli init`, `doctor`, `local_path` eintragen,
-   `preflight thy-gnosis`
-3. Entscheiden, ob der GitHub-Actions-Weg eingerichtet wird (`MAC_EXECUTOR.md`)
+   `preflight thy-gnosis`, dann **`python tests\windows_check.py`** und die
+   Ausgabe zurueckgeben
+3. `build_number_floor` fuer beide Apps aus App Store Connect ablesen
+4. Entscheiden, ob der GitHub-Actions-Weg eingerichtet wird (`MAC_EXECUTOR.md`) -
+   inklusive geschuetzter Umgebung `ios-signing` mit Required Reviewers
 
-Danach: BB-004 (Workflow einrichten) und BB-005 (erster echter Ad-Hoc-Build).
+Danach: BB-011 (`fetch_artifact`), dann BB-005 (Workflow einrichten) und
+BB-006 (erster echter Ad-Hoc-Build).

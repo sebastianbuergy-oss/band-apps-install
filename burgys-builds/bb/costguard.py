@@ -17,6 +17,50 @@ FREE = "FREE"
 FREE_TIER = "FREE_TIER"
 PAID = "PAID"
 
+#: GitHub-hosted **standard** macOS runner labels. These - and only these -
+#: are free and unlimited on public repositories.
+#:
+#: This is an allowlist, not a denylist, because the failure mode matters:
+#: a label we have never heard of might be a larger runner, and a larger
+#: runner is charged even on a public repository. Anything not listed here
+#: is refused rather than guessed at.
+STANDARD_MACOS_RUNNERS = frozenset({
+    "macos-latest", "macos-14", "macos-15", "macos-26",
+    "macos-15-intel", "macos-26-intel", "xcode-27",
+})
+
+#: Substrings that mark a larger (charged) runner even on a public repo.
+#: Only used to give a clearer refusal message - the allowlist above is what
+#: actually decides.
+LARGER_RUNNER_MARKERS = ("xlarge", "large", "-8core", "-12core", "-16core",
+                         "-24core", "-32core", "-64core", "arm64-", "self-hosted")
+
+
+def check_runner_label(label: str) -> dict:
+    """Decide whether a ``runs-on`` label may be used.
+
+    Returns ``{"allowed": bool, "label": str, "reason": str}``.  A label is
+    allowed only if it is on :data:`STANDARD_MACOS_RUNNERS` verbatim.
+    """
+    raw = (label or "").strip()
+    normalised = raw.lower()
+    if not normalised:
+        return {"allowed": False, "label": raw,
+                "reason": "Kein runs-on-Label angegeben. Buergys Builds raet nicht, "
+                          "welcher Runner gemeint ist."}
+    if normalised in STANDARD_MACOS_RUNNERS:
+        return {"allowed": True, "label": raw,
+                "reason": f"{raw} ist ein GitHub-Standard-Runner - auf oeffentlichen "
+                          "Repositories kostenlos."}
+    hint = ""
+    if any(m in normalised for m in LARGER_RUNNER_MARKERS):
+        hint = " Das Label sieht nach einem Larger Runner aus, der auch auf "\
+               "oeffentlichen Repositories kostenpflichtig ist."
+    return {"allowed": False, "label": raw,
+            "reason": f"{raw} steht nicht auf der Liste der erlaubten "
+                      f"Standard-Runner ({', '.join(sorted(STANDARD_MACOS_RUNNERS))})."
+                      + hint}
+
 #: What each known resource costs.  Adding a resource is a deliberate act;
 #: an unknown resource is treated as PAID, never as free.
 RESOURCES: dict[str, dict[str, Any]] = {
@@ -31,6 +75,7 @@ RESOURCES: dict[str, dict[str, Any]] = {
                 "standard GitHub-hosted runners is free and unlimited on public "
                 "repositories.' Larger runners are charged even on public repos - "
                 "never select one. Geprueft 2026-09-20, siehe docs/COST_MODEL.md.",
+        "needs_runner_label": True,
         # No documented minute cap for public repos, but we still meter it so
         # that a rule change cannot run up a bill unnoticed.
         "free_minutes_per_month": 2000,
@@ -38,6 +83,7 @@ RESOURCES: dict[str, dict[str, Any]] = {
     "github_actions_macos_private_repo": {
         "cost": PAID,
         "note": "macOS minutes on a private repo bill at 10x. Needs Sebastians ok.",
+        "needs_runner_label": True,
     },
     "github_pages": {
         "cost": FREE,
@@ -104,10 +150,22 @@ class CostGuard:
             "note": "Unbekannte Ressource - vom Cost Guard als kostenpflichtig behandelt.",
         })
 
-    def decide(self, resource: str, minutes: float = 0.0) -> dict:
-        """Return a decision dict without raising.  Used by the dashboard."""
+    def decide(self, resource: str, minutes: float = 0.0,
+               runner_label: str | None = None) -> dict:
+        """Return a decision dict without raising.  Used by the dashboard.
+
+        ``runner_label`` is the executor's ``runs-on`` value.  A GitHub
+        executor must pass it: a free public repository still costs money if
+        the job lands on a larger runner.
+        """
         spec = self.classify(resource)
         cost = spec["cost"]
+        if spec.get("needs_runner_label"):
+            verdict = check_runner_label(runner_label)
+            if not verdict["allowed"]:
+                return {"allowed": False, "resource": resource, "cost": PAID,
+                        "runner_label": runner_label,
+                        "reason": "Runner abgelehnt: " + verdict["reason"]}
         if cost == FREE:
             return {"allowed": True, "resource": resource, "cost": cost,
                     "reason": "kostenlos"}
@@ -131,9 +189,10 @@ class CostGuard:
         return {"allowed": True, "resource": resource, "cost": cost,
                 "used_minutes": used, "cap_minutes": cap, "reason": "im Freikontingent"}
 
-    def check(self, resource: str, minutes: float = 0.0) -> dict:
+    def check(self, resource: str, minutes: float = 0.0,
+              runner_label: str | None = None) -> dict:
         """Raise :class:`CostGuardBlocked` unless the resource may be used."""
-        decision = self.decide(resource, minutes)
+        decision = self.decide(resource, minutes, runner_label)
         if not decision["allowed"]:
             raise CostGuardBlocked(decision["reason"])
         return decision

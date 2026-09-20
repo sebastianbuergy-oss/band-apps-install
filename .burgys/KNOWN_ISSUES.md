@@ -22,6 +22,50 @@ OTA-Seite in `bb/ota.py` verwendet bereits das Giftgruen.
 
 ---
 
+## BB-I-007 - Windows nie ausgefuehrt (loest BB-I-006 ab)
+
+**Offen. Wichtigster Blocker. Aufgabe BB-013.**
+
+Weder Claudes Implementierungs-Sitzung noch Codex' Review-Sitzung lief unter
+Windows - beide waren Linux-Container ohne `cmd.exe`, PowerShell oder Wine.
+
+Statisch geprueft und sauber: keine `fcntl`/`pwd`/`grp`/Signal-Nutzung,
+`os.replace` statt `rename`, `mkdir`-Locks statt POSIX-Locks, `pathlib`
+durchgaengig, Pfadkomponenten lehnen `/` und `\` gleichermassen ab, jedes
+`open()` mit explizitem `encoding`, Schreibvorgaenge mit `newline="\n"`.
+
+Gemessen ist davon **nichts**. `burgys-builds/tests/windows_check.py` misst es:
+
+```
+cd burgys-builds
+python tests\windows_check.py
+```
+
+Solange die Ausgabe fehlt, ist "laeuft auf dem HP" eine Behauptung.
+
+---
+
+## BB-I-008 - Export-Methode koennte mit neuem Xcode brechen
+
+**Offen. Risiko fuer den ersten echten Build. Aufgabe BB-015.**
+
+Xcode 15.3 hat die Export-Methoden `ad-hoc` und `app-store` zugunsten von
+`release-testing` und `app-store-connect` als veraltet markiert. Beide
+Schreibweisen werden derzeit akzeptiert, aber der Runner nutzt Xcode 26.
+
+Codemagic umgeht das, weil dort `xcode-project build-ipa` die Methode selbst
+waehlt. Der eigene Workflow ruft `xcodebuild -exportArchive` direkt auf und
+muss sie benennen.
+
+*Abgefedert:* Das Template liest `BURGYS_EXPORT_METHOD_ADHOC` bzw.
+`BURGYS_EXPORT_METHOD_STORE` und nutzt sonst die alten Namen. Umschalten geht
+ohne Workflow-Aenderung.
+
+*Beim ersten Lauf darauf achten:* Scheitert `-exportArchive` mit einer Meldung
+ueber eine unbekannte Methode, ist das die Ursache.
+
+---
+
 ## BB-I-002 - Aufbewahrung ist konfigurierbar, aber raeumt noch nicht auf
 
 **Offen. Aufgabe BB-008.**
@@ -98,12 +142,5 @@ nach Ablauf. Ablauf ist erst in rund 11 Monaten.
 
 ## BB-I-006 - Auf dem HP noch nicht gelaufen
 
-**Offen. Aufgabe BB-004.**
-
-Die gesamte Entwicklung und alle 137 Tests liefen unter Linux/Python 3.11. Die
-plattformkritischen Stellen sind bewusst portabel gebaut (`os.replace`,
-`mkdir`-Locks, `pathlib`, keine POSIX-Aufrufe ausser einem `chmod`, das unter
-Windows still uebersprungen wird), aber **geprueft ist das unter Windows nicht**.
-
-*Zuerst zu pruefen:* `burgys init`, `burgys doctor`, `burgys preflight`,
-Verhalten der Sperren auf NTFS, Pfade mit Leerzeichen und Umlauten.
+**Abgeloest durch BB-I-007**, das dasselbe Problem praeziser fasst und ein
+Messwerkzeug mitbringt.

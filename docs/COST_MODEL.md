@@ -47,13 +47,26 @@ Und: **`thy-gnosis-ios` und `days-of-ruin-ios` sind beide oeffentlich.**
 Damit kostet ein Ad-Hoc-Build dieser beiden Apps auf GitHub Actions **nichts**.
 Kein Codemagic-Abo, kein Cloud-Mac, kein Mac mini noetig, um den Pilot zu fahren.
 
-Geprueft am 2026-09-20 gegen die GitHub-Dokumentation. Zwei Einschraenkungen, die
-mitgehoeren:
+Geprueft am 2026-09-20 gegen die GitHub-Dokumentation, unabhaengig
+nachkontrolliert am selben Tag im Code-Review (beide App-Repos melden ueber die
+GitHub-API `"private": false`). Zwei Einschraenkungen, die mitgehoeren:
 
-1. **Larger runners sind auch auf oeffentlichen Repos kostenpflichtig.** Das
-   Workflow-Template in `burgys-builds/templates/` nutzt `runs-on: macos-latest`.
-   Wer das auf einen groesseren Runner aendert, faengt an zu zahlen. Der Cost
-   Guard kennt nur die Standard-Variante als kostenlos.
+1. **Larger runners sind auch auf oeffentlichen Repos kostenpflichtig.**
+   Das ist keine Ermahnung mehr, sondern eine Pruefung: der Cost Guard fuehrt
+   eine **Allowlist** erlaubter Standard-Runner
+   (`bb/costguard.py::STANDARD_MACOS_RUNNERS`):
+
+   ```
+   macos-latest  macos-14  macos-15  macos-26
+   macos-15-intel  macos-26-intel  xcode-27
+   ```
+
+   Ein Executor, dessen `runs_on` nicht **woertlich** auf dieser Liste steht,
+   wird blockiert - auch ein fehlendes Label, auch etwas, das nur so aussieht
+   wie ein Standard-Runner (`macos-14-large`, `macos-15-xlarge`,
+   `self-hosted`). Ein Test stellt zusaetzlich sicher, dass das mitgelieferte
+   Workflow-Template kein Label benutzt, das der Guard ablehnen wuerde - damit
+   Template und Guard nicht auseinanderlaufen.
 2. **Ein privates Repo ist ein anderer Fall.** Sollte eines der App-Repos je auf
    privat gestellt werden, ist `visibility` in `executor_config` mitzuaendern -
    sonst blockiert der Cost Guard, was richtig ist. Bei unbekannter

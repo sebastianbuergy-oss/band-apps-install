@@ -7,9 +7,12 @@ input; no route ever takes a filesystem path from the caller.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import re
 import secrets
+import socket
 import threading
 import time
 from http import HTTPStatus
@@ -59,9 +62,31 @@ class _Sessions:
             return entry[1]
 
 
+def reuse_address_default(os_name: str) -> bool:
+    """Whether SO_REUSEADDR may be set, given an ``os.name``.
+
+    On POSIX it only lets us re-bind a port still in TIME_WAIT, which is a
+    convenience when restarting the controller.  On Windows the same flag
+    means something else entirely: it lets a *second* process bind a port
+    already in active use, and the newer socket wins.  Since every request
+    to this server carries the agent's bearer token, that is a
+    credential-theft vector, so Windows gets exclusive binding instead and a
+    busy port becomes a loud error rather than a silent handover.
+
+    Written as a function of ``os_name`` so the decision can be tested on
+    either platform rather than only on the one running the tests.
+    """
+    return os_name != "nt"
+
+
 class BurgysServer(ThreadingHTTPServer):
     daemon_threads = True
-    allow_reuse_address = True
+    allow_reuse_address = reuse_address_default(os.name)
+
+    def server_bind(self) -> None:
+        if os.name == "nt" and hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
     def __init__(self, address, controller: BuildController) -> None:
         super().__init__(address, BurgysHandler)
@@ -149,6 +174,16 @@ class BurgysHandler(BaseHTTPRequestHandler):
             return header[7:].strip()
         return self.headers.get("X-Burgys-Token") or None
 
+    ALLOWED_HOSTS = ("127.0.0.1", "localhost", "[::1]", "::1")
+
+    def _host_allowed(self) -> bool:
+        host = (self.headers.get("Host") or "").strip()
+        if not host:
+            return True          # HTTP/1.0 client without a Host header
+        name = host.rsplit(":", 1)[0] if not host.startswith("[") else \
+            host[:host.find("]") + 1]
+        return name.lower() in self.ALLOWED_HOSTS
+
     def _cookie(self, name: str) -> str | None:
         for part in (self.headers.get("Cookie") or "").split(";"):
             key, _, value = part.strip().partition("=")
@@ -176,7 +211,23 @@ class BurgysHandler(BaseHTTPRequestHandler):
             # Belt and braces: the socket is already bound to localhost.
             return self._error(HTTPStatus.FORBIDDEN, "nur lokal erreichbar")
 
-        allowed, retry = self.server.limiter.check(client)
+        # A page on the open internet can point a hostname at 127.0.0.1 and
+        # then talk to us from the browser (DNS rebinding).  The token check
+        # already stops it, but refusing a Host we did not expect costs one
+        # comparison and removes the class of attack.
+        if not self._host_allowed():
+            return self._error(HTTPStatus.FORBIDDEN,
+                               "unerwarteter Host-Header - Buergys Builds "
+                               "antwortet nur auf localhost")
+
+        # Every caller is 127.0.0.1, so the client address alone would put
+        # the dashboard, the CLI and the agent in one shared bucket and let
+        # any of them starve the others.  Key on the presented token instead,
+        # falling back to the address for unauthenticated routes.
+        presented = self._presented_token() or self._cookie("burgys_session")
+        bucket = f"token:{hashlib.sha256(presented.encode()).hexdigest()[:16]}" \
+            if presented else f"addr:{client}"
+        allowed, retry = self.server.limiter.check(bucket)
         if not allowed:
             return self._send(HTTPStatus.TOO_MANY_REQUESTS,
                               {"error": "zu viele Anfragen", "retry_after": retry},

@@ -17,6 +17,24 @@ Eine kostenpflichtige Ressource wurde angefordert. Die Meldung nennt welche.
   Eintragen in `bb/costguard.py::RESOURCES`.
 - GitHub-Executor blockiert obwohl das Repo oeffentlich ist? `visibility:
   "public"` in `executor_config` fehlt. Ohne Angabe wird `private` angenommen.
+
+## "Runner abgelehnt: ..."
+
+Der Cost Guard laesst nur Labels von seiner Allowlist zu (`COST_MODEL.md`).
+
+- *Kein runs-on-Label angegeben* - `runs_on` in `executor_config` nachtragen,
+  z. B. `"runs_on": "macos-latest"`. Buergys Builds raet nicht, welcher Runner
+  gemeint ist, weil ein falscher Tipp Geld kostet.
+- *steht nicht auf der Liste* - das Label ist entweder ein Larger Runner
+  (kostenpflichtig, auch auf oeffentlichen Repos) oder neu. Ist es wirklich
+  ein Standard-Runner, gehoert es in `STANDARD_MACOS_RUNNERS` - bewusst, mit
+  Beleg aus der GitHub-Dokumentation.
+
+## "unerwarteter Host-Header"
+
+Die API antwortet nur auf `127.0.0.1` und `localhost`. Wer ueber einen
+anderen Namen zugreift (eigener Hostname, Tunnel mit anderem Host-Header),
+bekommt 403. Fuer Fernzugriff einen SSH-Tunnel nach `127.0.0.1` verwenden.
 - Freikontingent erschoepft? Dann ist Schluss. Ein kostenpflichtiger Fallback ist
   ausgeschlossen - das ist der Sinn der Sache.
 

@@ -97,7 +97,25 @@ cd burgys-builds
 python -m unittest discover -s tests -t tests
 ```
 
-137 Tests, rund 16 Sekunden, keine externen Abhaengigkeiten, kein Netz.
+186 Tests, rund 20 Sekunden, keine externen Abhaengigkeiten, kein Netz.
+
+## Windows-Abnahme
+
+Zusaetzlich zur Testsuite gibt es eine Abnahme, die genau die Dinge misst, die
+sich unter Windows anders verhalten - Pfade mit Umlauten und Leerzeichen, lange
+Pfade, atomares Ersetzen bei offener Datei, Sperren ueber acht echte Prozesse,
+exklusive Portbindung, `npm.cmd`, Dateirechte:
+
+```bat
+python tests\windows_check.py
+```
+
+Das Skript baut nichts, fasst kein Signing-Material an und kostet nichts. Es
+schreibt nur in ein temporaeres Verzeichnis. Laeuft es nicht unter Windows,
+sagt es das und gibt sich ausdruecklich **nicht** als Windows-Abnahme aus.
+
+Solange diese Abnahme nicht auf dem HP gelaufen ist, gilt Buergys Builds unter
+Windows als ungeprueft.
 
 ## Autostart (optional)
 

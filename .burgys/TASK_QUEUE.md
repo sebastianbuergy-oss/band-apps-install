@@ -16,7 +16,10 @@ Ein Agent aendert nur, was er selbst geclaimt hat.
 | BB-009 | `ota_publish_dir` + `burgys publish`, damit das Kopieren auf die Live-Seite ein Befehl wird | TODO | frei |
 | BB-010 | Days of Ruin nachziehen, sobald der Pilot durch ist | TODO | frei |
 | BB-011 | Artefakt-Download im GitHub-Executor (`fetch_artifact`) ueber die Actions-API | TODO | frei |
-| BB-012 | Code-Review von v0.1 durch Codex | TODO | Codex |
+| BB-012 | Code-Review von v0.1 durch Codex | DONE | Codex |
+| BB-013 | Windows-Abnahme auf dem HP (`tests/windows_check.py`) | TODO | Sebastian |
+| BB-014 | Geschuetzte Umgebung `ios-signing` im App-Repo anlegen (Required Reviewers) | BLOCKED | wartet auf Freigabe |
+| BB-015 | Export-Methode beim ersten Lauf pruefen (`ad-hoc` vs `release-testing`) | TODO | offen bis erster Lauf |
 
 ## Hinweise zu einzelnen Aufgaben
 
@@ -25,6 +28,15 @@ Ein Agent aendert nur, was er selbst geclaimt hat.
 GitHub-Build mit "Executor meldet Erfolg, liefert aber keine IPA" - was korrekt
 ist, aber nicht das Ziel. Vor BB-006 zu erledigen.
 
-**BB-012**: besonders anzusehen waeren `bb/store.py` (Sperren), `bb/builds.py`
-(Reihenfolge der Pruefungen) und `bb/qr.py` (die Blocktabelle, auch wenn sie sich
-gegen die Geometrie selbst prueft).
+**BB-012** ist erledigt - Ergebnis in `HANDOFF.md`. 14 Befunde, alle behoben,
+Suite von 137 auf 186 Tests. Die Mutationspruefung (35 Sicherungen einzeln
+kaputtmachen) steht als Werkzeug bereit und sollte vor jedem groesseren Merge
+wiederholt werden.
+
+**BB-013** ist der wichtigste offene Punkt: bis das Skript auf dem HP gelaufen
+ist, ist die Windows-Tauglichkeit eine Behauptung, keine Messung.
+
+**BB-015**: Xcode 15.3 hat `ad-hoc`/`app-store` zugunsten von
+`release-testing`/`app-store-connect` als veraltet markiert. Das Template ist
+ueber `BURGYS_EXPORT_METHOD_ADHOC`/`_STORE` umschaltbar. Beim ersten echten Lauf
+darauf achten.
