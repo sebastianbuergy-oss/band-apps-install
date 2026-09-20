@@ -10,7 +10,7 @@ Der jeweils letzte Eintrag steht oben.
 **Rolle:** IMPLEMENTATION
 **Task-IDs:** BB-011, BB-008
 **Startcommit:** `58808d1` (Ende des Phase-1-Reviews)
-**Endcommit:** siehe Branch `codex/bb-011-fetch-artifact`
+**Endcommit:** `dc7c72d` (Branch `codex/bb-011-fetch-artifact`)
 **Basis:** `codex/bb-review-phase1` - die Review-Korrekturen werden gebraucht
 **Umgebung:** Linux-Container - **weiterhin kein Windows, kein Mac**
 
