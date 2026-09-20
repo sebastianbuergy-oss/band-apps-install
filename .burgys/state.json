@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "project": "burgys-builds",
-  "current_commit": "",
+  "current_commit": "af84e28ed034736b476f4d896704eddc5ae5891a",
   "active_tasks": [],
   "last_agent": "claude",
   "last_handoff": "2026-09-20",
