@@ -34,8 +34,10 @@ cd burgys-builds
 python -m bb.cli init
 python -m bb.cli preflight thy-gnosis
 python -m bb.cli dashboard
+python -m bb.cli serve --worker     # für den Betrieb mit Bürgys Agent
 ```
 
 Einstieg: [`docs/INVENTORY.md`](docs/INVENTORY.md) — was da ist und was fehlt —
-und [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Die Installationsseite und
+und [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Für die Anbindung von
+Bürgys Agent: [`docs/AGENT_INTEGRATION.md`](docs/AGENT_INTEGRATION.md). Die Installationsseite und
 die Browser-Versionen oben sind davon unberührt und funktionieren wie bisher.

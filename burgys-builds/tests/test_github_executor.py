@@ -8,6 +8,7 @@ an archive that arrived over the network.
 """
 from __future__ import annotations
 
+import datetime as _dt
 import hashlib
 import io
 import json
@@ -22,7 +23,9 @@ from helpers import ControllerCase
 from bb.errors import ExecutorUnavailable, ValidationError
 from bb.executors import MacJob, get_executor
 
-BUILD_ID = "BB-20260920-TST-001"
+# Derived, never hard-coded: a literal date here passes on the day it is
+# written and starts failing at midnight.  (It did.)
+BUILD_ID = f"BB-{_dt.date.today():%Y%m%d}-TST-001"
 
 
 def make_zip(entries: dict) -> bytes:
@@ -63,6 +66,15 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):
+        """Record the dispatched build id and answer about *that* one."""
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(length).decode()) if length else {}
+        except (ValueError, json.JSONDecodeError):
+            body = {}
+        dispatched = (body.get("inputs") or {}).get("build_id")
+        if dispatched:
+            self.state["build_id"] = dispatched
         self.state["dispatched"] = True
         self._json(204, {})
 
@@ -70,15 +82,19 @@ class _Handler(BaseHTTPRequestHandler):
         st = self.state
         path = self.path.split("?")[0]
         if path.endswith("/runs"):
+            build_id = st.get("build_id") or BUILD_ID
             return self._json(200, {"workflow_runs": [{
                 "id": 4242, "status": st["status"], "conclusion": st["conclusion"],
-                "name": f"{BUILD_ID} ThyGnosis AD_HOC",
-                "display_title": f"{BUILD_ID} ThyGnosis AD_HOC"}]})
+                "name": f"{build_id} ThyGnosis AD_HOC",
+                "display_title": f"{build_id} ThyGnosis AD_HOC"}]})
         if path == "/repos/o/r/actions/runs/4242":
             return self._json(200, {"id": 4242, "status": st["status"],
                                     "conclusion": st["conclusion"]})
         if path == "/repos/o/r/actions/runs/4242/artifacts":
-            return self._json(200, {"artifacts": st["artifacts"]})
+            artifacts = [dict(a, name=st.get("build_id") or a["name"])
+                         if a.get("name") == BUILD_ID else a
+                         for a in st["artifacts"]]
+            return self._json(200, {"artifacts": artifacts})
         if path == "/repos/o/r/actions/artifacts/9/zip":
             # Record whether credentials reached the API endpoint (they should)
             st["auth_on_api"] = self.headers.get("Authorization")
@@ -180,6 +196,12 @@ class TestFetchArtifact(GitHubExecutorCase):
         handle = ex.submit(self.job())
         ex.poll(handle)
         return ex, ex.fetch_artifact(handle, self.tmp / "artifacts")
+
+    def setUp(self):
+        super().setUp()
+        # These tests drive submit() directly with BUILD_ID, so the stub and
+        # the fixture zip already agree.
+        self.server.state["build_id"] = BUILD_ID
 
     def test_the_ipa_lands_on_disk(self):
         _, path = self._fetch()

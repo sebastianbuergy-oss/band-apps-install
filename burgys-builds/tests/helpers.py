@@ -152,8 +152,11 @@ class ControllerCase(unittest.TestCase):
         data["local_path"] = str(self.checkout)
         data.update(self.project_overrides)
         self.project_data = data
-        self.config = load_config(env={"BURGYS_DATA": str(self.tmp / "data"),
-                                       "BURGYS_API_TOKEN_FILE": str(self.tmp / "tokens.json")})
+        self.config = load_config(env={
+            "BURGYS_DATA": str(self.tmp / "data"),
+            "BURGYS_API_TOKEN_FILE": str(self.tmp / "tokens.json"),
+            # Never let a test write the repository's own state file.
+            "BURGYS_AGENT_STATE_FILE": str(self.tmp / "state.json")})
         self.config["default_executor"] = "dryrun"
         self.config["require_approval_for_mac_builds"] = False
         self.config.update(self.config_overrides)
@@ -161,8 +164,10 @@ class ControllerCase(unittest.TestCase):
 
     def rebuild_controller(self, **config_overrides) -> BuildController:
         """A *second* controller over the same data root - restart simulation."""
-        config = load_config(env={"BURGYS_DATA": str(self.tmp / "data"),
-                                  "BURGYS_API_TOKEN_FILE": str(self.tmp / "tokens.json")})
+        config = load_config(env={
+            "BURGYS_DATA": str(self.tmp / "data"),
+            "BURGYS_API_TOKEN_FILE": str(self.tmp / "tokens.json"),
+            "BURGYS_AGENT_STATE_FILE": str(self.tmp / "state.json")})
         config["default_executor"] = self.config["default_executor"]
         config["require_approval_for_mac_builds"] = \
             self.config["require_approval_for_mac_builds"]

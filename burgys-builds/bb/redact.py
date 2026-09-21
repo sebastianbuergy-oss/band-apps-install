@@ -41,6 +41,20 @@ _PATTERNS = (
     re.compile(r"\b[A-Za-z0-9+/]{60,}={0,2}\b"),
 )
 
+#: Lengths of the hex digests we deliberately do NOT redact.
+#: A SHA-256 is 64 hex characters, which the base64-ish pattern above happily
+#: swallows - and checksums are the opposite of a secret here: the build
+#: manifest (brief, section 14) and the install page exist to show them.
+#: The trade-off is conscious: a hex-encoded 256-bit key is also 64
+#: characters, but no part of Buergys Builds stores key material as bare hex,
+#: while every build stores a SHA-256.
+_DIGEST_LENGTHS = frozenset({64, 96, 128})
+_HEX_ONLY = re.compile(r"^[0-9a-fA-F]+$")
+
+
+def _is_checksum(text: str) -> bool:
+    return len(text) in _DIGEST_LENGTHS and bool(_HEX_ONLY.match(text))
+
 
 def _is_secret_key(key: str) -> bool:
     low = str(key).lower()
@@ -58,7 +72,8 @@ def redact_text(text: str) -> str:
         if pat.groups >= 3:
             out = pat.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}", out)
         else:
-            out = pat.sub(MASK, out)
+            out = pat.sub(
+                lambda m: m.group(0) if _is_checksum(m.group(0)) else MASK, out)
     return out
 
 

@@ -161,6 +161,43 @@ class TestApprovalGate(ControllerCase):
         self.assertEqual(manifest.status, S.WAITING_APPROVAL)
 
 
+class TestPollInterval(ControllerCase):
+    def test_a_zero_poll_interval_is_clamped(self):
+        """Polling a hosted API in a tight loop is how you get banned.
+
+        A test once passed poll_interval=0 against a stub and turned a
+        missed match into thousands of requests a second.
+        """
+        from bb.builds import BuildController
+
+        self.assertGreater(BuildController.MIN_POLL_INTERVAL, 0)
+
+        seen = []
+
+        @register
+        class _Counting(MacExecutor):
+            name = "test-counting"
+            cost_resource = "windows_local"
+            produces_real_ipa = True
+
+            def availability(self): return AVAILABLE
+            def submit(self, job): return "h"
+            def poll(self, handle):
+                import time as _t
+                seen.append(_t.monotonic())
+                return MacJobResult(state=S.MAC_BUILDING, detail="laeuft")
+
+        controller = self.rebuild_controller(default_executor="test-counting")
+        controller.request_build("testapp", "AD_HOC", requested_by="s")
+        controller.run_next(poll_interval=0, max_wait_minutes=0.02)
+        gaps = [b - a for a, b in zip(seen, seen[1:])]
+        self.assertTrue(seen, "the executor was never polled")
+        for gap in gaps:
+            self.assertGreaterEqual(
+                gap, BuildController.MIN_POLL_INTERVAL * 0.8,
+                f"polled every {gap:.3f}s despite the clamp")
+
+
 class TestDiskFull(ControllerCase):
     def test_a_full_disk_blocks_a_request_before_anything_is_allocated(self):
         config = dict(self.config)

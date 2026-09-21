@@ -45,6 +45,25 @@ class TestRedaction(unittest.TestCase):
         blob = "A" * 80
         self.assertNotIn(blob, redact_text(f"cert: {blob}"))
 
+    def test_checksums_survive_redaction(self):
+        """A SHA-256 is 64 hex chars, which the base64-ish pattern matched.
+
+        Every manifest and the install page exist to show this value, so
+        redacting it destroyed the one thing the brief asks for in section 14.
+        """
+        sha = "9fa8f7c2543be9f58b8fe3ad1bdbd1df616ce568948e0c86f10c4394bb661275"
+        self.assertEqual(redact_text(sha), sha)
+        self.assertEqual(redact({"artifact_sha256": sha})["artifact_sha256"], sha)
+        self.assertEqual(redact({"ipa_sha256": sha})["ipa_sha256"], sha)
+        self.assertIn(sha, redact_text(f"shasum: {sha}  artifact/app.ipa"))
+
+    def test_key_material_that_merely_looks_like_a_digest_is_still_redacted(self):
+        # Right alphabet, wrong length for any digest.
+        self.assertEqual(redact_text("a" * 70), MASK)
+        # Real base64 with mixed case and padding.
+        blob = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCxyzabcdef1234=="
+        self.assertNotIn(blob, redact_text(blob))
+
     def test_harmless_lookalike_keys_survive(self):
         out = redact({"auth_required": True, "auth_mode": "bearer"})
         self.assertEqual(out["auth_required"], True)
@@ -252,6 +271,29 @@ class TestManifest(ControllerCase):
                     "version", "build_number", "mode", "requested_by", "status",
                     "executor", "artifact_sha256", "created_at"):
             self.assertIn(key, manifest.data, key)
+
+    def test_the_checksum_survives_a_save_and_reload(self):
+        """The in-memory object kept the value; only disk lost it.
+
+        That is why no test noticed: everything asserted against the live
+        manifest. This one goes through the file.
+        """
+        sha = "9fa8f7c2543be9f58b8fe3ad1bdbd1df616ce568948e0c86f10c4394bb661275"
+        manifest = self.controller.request_build(
+            "testapp", "AD_HOC", requested_by="s", dry_run=True)
+        manifest.update(artifact_sha256=sha,
+                        ota={"ipa_sha256": sha, "app": "Test App"})
+        manifest.save(self.controller.paths)
+
+        reloaded = self.rebuild_controller().get(manifest.build_id)
+        self.assertEqual(reloaded.get("artifact_sha256"), sha)
+        self.assertEqual(reloaded.get("ota")["ipa_sha256"], sha)
+        self.assertEqual(reloaded.to_dict()["artifact_sha256"], sha)
+
+    def test_the_checksum_survives_the_audit_log(self):
+        sha = "0" * 63 + "f"
+        self.controller.audit.record("artifact.created", detail={"sha256": sha})
+        self.assertEqual(self.controller.audit.read(1)[0]["detail"]["sha256"], sha)
 
     def test_no_secret_survives_a_save(self):
         manifest = self.controller.request_build(

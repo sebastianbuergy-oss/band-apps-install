@@ -48,6 +48,8 @@ DEFAULTS: dict[str, Any] = {
     # --- ota ----------------------------------------------------------
     "ota_base_url": "https://sebastianbuergy-oss.github.io/band-apps-install",
     "ota_publish_dir": "",
+    # Empty means the repository's own .burgys/state.json (brief, section 18).
+    "agent_state_file": "",
 }
 
 #: Environment overrides.  Booleans accept 1/true/yes/on.
@@ -60,6 +62,7 @@ _ENV = {
     "BURGYS_MAX_BUILDS_PER_DAY": ("max_real_builds_per_project_per_day", "int"),
     "BURGYS_REQUIRE_APPROVAL": ("require_approval_for_mac_builds", "bool"),
     "BURGYS_OTA_BASE_URL": ("ota_base_url", "str"),
+    "BURGYS_AGENT_STATE_FILE": ("agent_state_file", "str"),
 }
 
 

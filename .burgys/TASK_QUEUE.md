@@ -13,13 +13,15 @@ Ein Agent aendert nur, was er selbst geclaimt hat.
 | BB-006 | Erster echter Ad-Hoc-Build ueber Buergys Builds, IPA auf iPhone installieren | BLOCKED | wartet auf BB-005 |
 | BB-007 | `build_number_floor` fuer beide Apps aus App Store Connect ermitteln | TODO | Sebastian |
 | BB-008 | Retention/Aufraeumen implementieren (BB-I-002) | DONE | Codex |
-| BB-009 | `ota_publish_dir` + `burgys publish`, damit das Kopieren auf die Live-Seite ein Befehl wird | TODO | frei |
+| BB-009 | `ota_publish_dir` + `burgys publish`, damit das Kopieren auf die Live-Seite ein Befehl wird | DONE | Codex |
 | BB-010 | Days of Ruin nachziehen, sobald der Pilot durch ist | TODO | frei |
 | BB-011 | Artefakt-Download im GitHub-Executor (`fetch_artifact`) ueber die Actions-API | DONE | Codex |
 | BB-012 | Code-Review von v0.1 durch Codex | DONE | Codex |
 | BB-013 | Windows-Abnahme auf dem HP (`tests/windows_check.py`) | TODO | Sebastian |
 | BB-014 | Geschuetzte Umgebung `ios-signing` im App-Repo anlegen (Required Reviewers) | BLOCKED | wartet auf Freigabe |
 | BB-015 | Export-Methode beim ersten Lauf pruefen (`ad-hoc` vs `release-testing`) | TODO | offen bis erster Lauf |
+| BB-016 | Agent-Vertrag: `/capabilities`, `bb/agent_client.py`, Worker, live `state.json` | DONE | Codex |
+| BB-017 | Rueckmeldung der Buergys-Agent-Session einarbeiten | TODO | Codex (wartet auf Antwort) |
 
 ## Hinweise zu einzelnen Aufgaben
 

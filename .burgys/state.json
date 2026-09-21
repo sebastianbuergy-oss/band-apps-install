@@ -5,14 +5,18 @@
   "active_tasks": [
     "BB-013",
     "BB-007",
-    "BB-005"
+    "BB-005",
+    "BB-017"
   ],
   "last_agent": "codex",
-  "last_handoff": "2026-09-20 (CODEX review)",
+  "last_handoff": "2026-09-21 (CODEX Agent-Anbindung)",
   "system_status": {
-    "windows_controller": "IMPLEMENTED_TESTED_ON_LINUX_UNVERIFIED_ON_WINDOWS",
-    "mac_executor": "NONE",
-    "cost_guard": true
+    "windows_controller": "ONLINE",
+    "mac_executor": "OFFLINE",
+    "mac_executor_name": "github",
+    "mac_executor_produces_real_ipa": true,
+    "cost_guard": true,
+    "disk": "OK"
   },
   "pilot": {
     "project": "thy-gnosis",
@@ -20,21 +24,38 @@
     "acceptance_points_done": 5,
     "blocked_on": "Windows-Abnahme auf dem HP und Sebastians Freigabe - kein Codeblocker mehr offen"
   },
-  "notes": "Cost Guard aktiv: PAID_SERVICES_ALLOWED=false, zusaetzlich Runner-Allowlist. Kein macOS-Executor freigegeben, daher keine echte IPA aus Buergys Builds. Windows nie ausgefuehrt.",
+  "notes": "Cost Guard aktiv (PAID_SERVICES_ALLOWED=false plus Runner-Allowlist). Kein macOS-Executor freigegeben, daher keine echte IPA. Windows nie ausgefuehrt. Agent-Vertrag steht; Rueckmeldung der Agent-Session offen.",
   "review": {
     "phase": 1,
     "agent": "codex",
     "findings": 14,
     "fixed": 14,
     "tests_before": 137,
-    "tests_after": 223,
+    "tests_after": 277,
     "mutants_killed_before": "22/26",
     "mutants_killed_after": "35/35",
     "windows_verified": false,
     "real_ios_build": false,
     "follow_up_done": [
       "BB-011 fetch_artifact",
-      "BB-008 retention"
+      "BB-008 retention",
+      "BB-009 publish",
+      "BB-016 Agent-Vertrag"
     ]
+  },
+  "updated_at": "2026-09-21T14:28:24",
+  "builds": {
+    "today": {
+      "total": 1,
+      "success": 0,
+      "failed": 0,
+      "dry_runs": 0
+    },
+    "queue_length": 0,
+    "running": [
+      "BB-20260921-TST-001"
+    ],
+    "waiting_approval": [],
+    "last_success": null
   }
 }

@@ -111,6 +111,12 @@ def cmd_build(args) -> int:
 
 def cmd_run(args) -> int:
     controller = _controller(args)
+    if args.all:
+        from .worker import Worker
+
+        done = Worker(controller, poll_interval=args.poll).drain()
+        print(f"{done} Build(s) ausgefuehrt.")
+        return 0
     manifest = controller.run_next(poll_interval=args.poll)
     if manifest is None:
         print("Queue ist leer.")
@@ -154,7 +160,13 @@ def cmd_logs(args) -> int:
 def cmd_status(args) -> int:
     from .api import system_status
 
-    _print(system_status(_controller(args)))
+    controller = _controller(args)
+    if args.write_state:
+        from . import agentstate
+
+        print(f"geschrieben: {agentstate.update(controller, agent=args.actor)}")
+        return 0
+    _print(system_status(controller))
     return 0
 
 
@@ -210,6 +222,53 @@ def cmd_ota(args) -> int:
     return 0
 
 
+def cmd_publish(args) -> int:
+    from . import publish
+
+    controller = _controller(args)
+    result = publish.apply(controller, args.build_id, dry_run=not args.apply)
+    verb = "Wuerde veroeffentlichen" if result["dry_run"] else "Veroeffentlicht"
+    print(f"{verb}: {result['app']} {result['version']} "
+          f"({result['build_number']}) aus {result['build_id']}")
+    print(f"  Ziel     : {result['target']}")
+    print(f"  Commit   : {result['commit']}")
+    print(f"  SHA-256  : {result['sha256']}")
+    for entry in result["copies"]:
+        mark = "ersetzt" if entry["replaces"] else "neu"
+        print(f"  {entry['name']:<28} {entry['bytes']:>10} B  ({mark})")
+    if result["replaces_build"]:
+        print(f"  loest ab : {result['replaces_build']}")
+    if not result["icon_present"]:
+        print(f"  HINWEIS  : {result['icon_name']} liegt nicht im Zielordner - "
+              "die Installationsseite zeigt dann kein Icon.")
+    if result["dry_run"]:
+        print("\nNichts geschrieben. Mit --apply ausfuehren.")
+    else:
+        print("\nGeschrieben. Committen und pushen macht Buergys Builds nicht:")
+        print(f"  git -C \"{result['target']}\" add -A")
+        print(f"  git -C \"{result['target']}\" commit -m \"{result['app']} "
+              f"{result['version']} ({result['build_number']})\"")
+        print(f"  git -C \"{result['target']}\" push")
+    return 0
+
+
+def cmd_published(args) -> int:
+    from . import publish
+
+    controller = _controller(args)
+    ledger = publish.live(controller.config)
+    if not ledger:
+        print("Nichts veroeffentlicht (oder ota_publish_dir nicht konfiguriert).")
+        return 0
+    for project, entry in sorted(ledger.items()):
+        print(f"{project:<16} {entry.get('app','?'):<16} "
+              f"{entry.get('version','?')} ({entry.get('build_number','?')})  "
+              f"{str(entry.get('commit_short') or '')[:8]:<9} "
+              f"{entry.get('published_at','')}")
+        print(f"  {entry.get('build_id')}  sha {str(entry.get('ipa_sha256'))[:16]}...")
+    return 0
+
+
 def cmd_qr(args) -> int:
     from . import qr
 
@@ -230,9 +289,15 @@ def cmd_serve(args) -> int:
     from .api import serve
 
     controller = _controller(args)
-    server = serve(controller, args.host, args.port)
+    server = serve(controller, args.host, args.port, worker=args.worker)
     host, port = server.server_address[0], server.server_address[1]
     print(f"Buergys Builds auf http://{host}:{port}/  (nur lokal)")
+    if args.worker:
+        print("Worker laeuft: freigegebene Builds aus der Queue werden "
+              "automatisch ausgefuehrt.")
+    else:
+        print("Ohne Worker: Builds warten in der Queue, bis `burgys run` "
+              "sie ausfuehrt. Fuer Buergys Agent --worker verwenden.")
     print("Beenden mit Strg+C.")
     try:
         server.serve_forever()
@@ -289,7 +354,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("init", help="Datenverzeichnis und Tokens anlegen").set_defaults(fn=cmd_init)
     sub.add_parser("projects", help="konfigurierte Projekte auflisten").set_defaults(fn=cmd_projects)
-    sub.add_parser("status", help="Systemstatus als JSON").set_defaults(fn=cmd_status)
+    p = sub.add_parser("status", help="Systemstatus als JSON")
+    p.add_argument("--write-state", action="store_true",
+                   help=".burgys/state.json aktualisieren statt auszugeben")
+    p.set_defaults(fn=cmd_status)
     sub.add_parser("recover", help="Queue nach einem Neustart aufraeumen").set_defaults(fn=cmd_recover)
 
     p = sub.add_parser("retention", help="alte Builds, Logs und Artefakte aufraeumen")
@@ -317,6 +385,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(fn=cmd_build)
 
     p = sub.add_parser("run", help="naechsten Build aus der Queue ausfuehren")
+    p.add_argument("--all", action="store_true", help="die ganze Queue abarbeiten")
     p.add_argument("--poll", type=float, default=5.0)
     p.set_defaults(fn=cmd_run)
 
@@ -342,6 +411,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("build_id")
     p.set_defaults(fn=cmd_ota)
 
+    p = sub.add_parser("publish", help="ein OTA-Release auf die Installationsseite legen")
+    p.add_argument("build_id")
+    p.add_argument("--apply", action="store_true",
+                   help="wirklich schreiben (ohne diese Option nur anzeigen)")
+    p.set_defaults(fn=cmd_publish)
+
+    sub.add_parser("published", help="zeigen, was aktuell veroeffentlicht ist") \
+        .set_defaults(fn=cmd_published)
+
     p = sub.add_parser("ipa", help="eine IPA untersuchen (ohne Mac)")
     p.add_argument("path")
     p.set_defaults(fn=cmd_ipa)
@@ -355,6 +433,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("serve", help="API und Dashboard starten")
     p.add_argument("--host")
     p.add_argument("--port", type=int)
+    p.add_argument("--worker", action="store_true",
+                   help="freigegebene Builds automatisch ausfuehren "
+                        "(fuer den Betrieb mit Buergys Agent)")
     p.set_defaults(fn=cmd_serve)
 
     p = sub.add_parser("dashboard", help="Dashboard starten und oeffnen")

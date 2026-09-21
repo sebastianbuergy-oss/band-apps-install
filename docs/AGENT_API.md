@@ -31,6 +31,7 @@ Authorization: Bearer <token>
 | Methode | Pfad | Scope | |
 |---|---|---|---|
 | GET | `/health` | - | Lebenszeichen |
+| GET | `/capabilities` | read | **Zuerst fragen:** was kann das System, was darf dieses Token |
 | GET | `/status` | read | System, Cost Guard, Queue, Speicher, Builds heute |
 | GET | `/projects` | read | Projektliste |
 | GET | `/projects/{id}` | read | Projekt, Limit, letzte Builds |
@@ -43,6 +44,8 @@ Authorization: Bearer <token>
 | GET | `/builds/{build-id}/artifacts` | read | Dateinamen, SHA-256, OTA-Daten |
 | GET | `/queue` | read | Queue |
 | GET | `/audit?limit=n&project=id` | read | Audit-Log |
+| GET | `/published` | read | was aktuell auf der Installationsseite liegt |
+| POST | `/builds/{build-id}/publish` | **release** | OTA-Release veroeffentlichen (`dry_run` ist Standard) |
 
 `POST /builds` mit `dry_run: false` verlangt Scope `build`. Mit dem
 Agent-Token kommt eine 400 mit dem Hinweis, dass `dry_run: true` kostenlos
@@ -85,6 +88,17 @@ curl -s -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
 `/` verlangt dasselbe Token. `?token=<agent-token>` tauscht es einmalig gegen ein
 `HttpOnly`-Cookie (8 Stunden). Das Token selbst steht nie im HTML.
 
+## Client statt Handarbeit
+
+Es gibt einen fertigen Client - `bb/agent_client.py`, reine Standardbibliothek.
+Details und Fehlerbehandlung in `AGENT_INTEGRATION.md`.
+
+```python
+from bb.agent_client import BurgysClient
+bb = BurgysClient()
+bb.capabilities()["policy"]
+```
+
 ## Fuer Buergys Agent
 
 Der Agent fuehrt keine Shell-Befehle aus. Er spricht diese API. Empfohlene
@@ -99,3 +113,8 @@ Schleife:
 
 Ein Build, der `WAITING_APPROVAL` meldet, wartet auf einen Menschen. Der Agent
 soll das melden, nicht umgehen.
+
+**Ohne Worker passiert nichts.** `burgys serve` nimmt Builds an und legt sie in
+die Queue; ausgefuehrt werden sie erst durch `burgys run` oder durch
+`burgys serve --worker`. Fuer den Betrieb mit Buergys Agent ist `--worker`
+richtig - er faehrt nur ab, was ohnehin laufen darf.

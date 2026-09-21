@@ -22,6 +22,50 @@ OTA-Seite in `bb/ota.py` verwendet bereits das Giftgruen.
 
 ---
 
+## BB-I-009 - Jede SHA-256 wurde beim Speichern geschwaerzt
+
+**BEHOBEN (Codex, 2026-09-21). War ein echter Datenverlust.**
+
+Das Schwaerzungsmuster fuer "base64-aehnliche Blobs" (`[A-Za-z0-9+/]{60,}`)
+passte auf **jede SHA-256-Hexsumme** - die ist 64 Zeichen lang. Folge:
+
+- `artifact_sha256` im gespeicherten Manifest wurde zu `[REDACTED]`, obwohl
+  Abschnitt 14 des Auftrags genau dieses Feld verlangt
+- dasselbe fuer `ota.ipa_sha256`
+- die Installationsseite haette `[REDACTED]` als Pruefsumme angezeigt
+- nach einem Neustart war die Summe unwiederbringlich weg
+
+Warum es kein Test bemerkt hat: das Manifest-Objekt im Speicher behaelt den
+echten Wert, geschwaerzt wird erst beim `save()` und in `to_dict()`. Alle
+bestehenden Tests prueften gegen das lebende Objekt. Aufgefallen ist es erst,
+als `burgys publish` das Manifest **von der Platte** las.
+
+*Behoben:* Hexsummen kanonischer Laenge (64/96/128) werden nicht mehr
+geschwaerzt. Echtes Schluesselmaterial - gemischte Schreibweise, `+/=`, andere
+Laengen - weiterhin schon. Tests gibt es jetzt an der Persistenz-Grenze, nicht
+nur im Speicher.
+
+---
+
+## BB-I-010 - Ein Test hatte ein Datum fest verdrahtet
+
+**BEHOBEN (Codex, 2026-09-21).**
+
+`test_github_executor.py` verglich gegen `BB-20260920-TST-001`. Am 21. erzeugte
+der Controller `BB-20260921-...`, der Stub antwortete mit dem alten Namen,
+`poll` fand den Run nie und drehte mit `poll_interval=0` eine Endlosschleife,
+bis der Stub-Server blockierte. Die Suite lief von 33s auf ueber 600s.
+
+Zwei Lehren, beide umgesetzt:
+
+1. Die Build-ID wird jetzt aus dem heutigen Datum abgeleitet, und der Stub
+   antwortet ueber die ID, die tatsaechlich dispatcht wurde.
+2. **Echte Haertung:** `_await` klemmt das Poll-Intervall auf mindestens
+   0,25 s. Eine Endlosschleife gegen `api.github.com` waere ein sicherer Weg,
+   rate-limitiert oder gesperrt zu werden.
+
+---
+
 ## BB-I-007 - Windows nie ausgefuehrt (loest BB-I-006 ab)
 
 **Offen. Wichtigster Blocker. Aufgabe BB-013.**

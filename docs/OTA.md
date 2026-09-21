@@ -94,14 +94,25 @@ burgys qr "https://..." --out qr.png
 
 ## Veroeffentlichen
 
-Heute von Hand, und das ist Absicht - die Live-Seite ist die, ueber die die Band
-ihre Apps bekommt:
-
 ```
-copy data\ota\BB-...\thy-gnosis.ipa    ..\band-apps-install\
-copy data\ota\BB-...\thy-gnosis.plist  ..\band-apps-install\
-git -C ..\band-apps-install add -A && git -C ..\band-apps-install commit -m "..." && git -C ..\band-apps-install push
+burgys publish BB-20260921-TG-001            # zeigt nur, was passieren wuerde
+burgys publish BB-20260921-TG-001 --apply    # schreibt
+burgys published                             # was liegt gerade live
 ```
 
-Ein `ota_publish_dir` ist vorgesehen, aber leer voreingestellt. Automatisches
-Deployen auf eine oeffentliche Seite kommt erst, wenn der Pilot durch ist.
+Vorsichtig, weil das Ziel die Seite ist, ueber die die Band ihre Apps bekommt
+(Entscheidung BB-D-007):
+
+- `ota_publish_dir` ist leer voreingestellt - ohne Konfiguration passiert nichts
+- ohne `--apply` wird nichts geschrieben
+- die IPA wird **neu gehasht** und gegen das Manifest geprueft, bevor sie kopiert
+  wird; ein veraendertes Artefakt kommt nicht auf die Seite
+- ein Dry-Run-Build wird nie veroeffentlicht
+- `index.html` wird aus dem ganzen `published.json` neu gebaut, also faellt beim
+  Veroeffentlichen einer App die andere nicht von der Seite
+- geloescht wird nie etwas
+
+**Committen und pushen bleibt Handarbeit.** Der Befehl schreibt Dateien und
+nennt danach die drei git-Kommandos; ausfuehren musst du sie selbst. Ein System,
+das noch keinen einzigen echten Build gemacht hat, pusht nicht von allein auf
+eine Live-Seite.

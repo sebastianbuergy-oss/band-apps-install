@@ -29,6 +29,7 @@ from .builds import BuildController
 from .errors import BurgysError, ValidationError
 from .executors import get_executor
 from .ids import validate_build_id, validate_project_id
+from .projects import MODES
 from .ratelimit import RateLimiter
 from .redact import redact
 from .store import disk_status
@@ -96,6 +97,8 @@ class BurgysServer(ThreadingHTTPServer):
         self.limiter = RateLimiter(controller.config.get("api_rate_limit_per_minute", 120))
         self.sessions = _Sessions()
         self.started_at = time.time()
+        #: Set by :func:`serve` when started with ``worker=True``.
+        self.worker = None
 
 
 _ROUTES: list = []
@@ -338,7 +341,20 @@ def system_status(controller: BuildController) -> dict:
                             int(controller.config["min_free_bytes"]),
                             int(controller.config["warn_free_bytes"])),
         "retention": _retention_summary(controller),
+        "worker": _worker_summary(controller),
     }
+
+
+def _worker_summary(controller) -> dict:
+    server = getattr(controller, "_server", None)
+    worker = getattr(server, "worker", None) if server else None
+    if worker is None:
+        return {"running": False,
+                "note": "Kein Worker. Builds laufen erst, wenn jemand "
+                        "`burgys run` ausfuehrt oder der Server mit "
+                        "--worker gestartet wird."}
+    return {"running": worker.running, "completed": worker.completed,
+            "errors": worker.errors}
 
 
 def _retention_summary(controller) -> dict:
@@ -358,6 +374,58 @@ def _retention_summary(controller) -> dict:
 # --------------------------------------------------------------------------
 # routes
 # --------------------------------------------------------------------------
+
+@route("GET", "/capabilities", AU.READ)
+def _capabilities(h, identity, params, query):
+    """What this controller can do, and what *this caller* may do.
+
+    Buergys Agent asks here first instead of guessing.  The scopes come from
+    the presented token, so an agent can tell "I am not allowed to" apart
+    from "the system cannot".
+    """
+    from . import __version__
+
+    mine = list(identity.get("scopes") or [])
+    routes = [{
+        "method": verb,
+        "path": pattern.pattern.strip("^$"),
+        "scope": scope,
+        "allowed_for_you": scope in mine,
+    } for verb, pattern, scope, _fn in _ROUTES]
+    controller = h.controller
+    guard = controller.cost_guard
+    status = system_status(controller)
+    return HTTPStatus.OK, {
+        "service": "burgys-builds",
+        "version": __version__,
+        "schema_version": 1,
+        "identity": {"name": identity.get("name"), "scopes": mine},
+        "routes": sorted(routes, key=lambda r: (r["path"], r["method"])),
+        "build_states": list(S.ALL),
+        "terminal_states": sorted(S.TERMINAL),
+        "modes": list(MODES),
+        "projects": [pr.id for pr in controller.registry.all()],
+        "policy": {
+            "paid_services_allowed": guard.allowed,
+            "approval_required_for_real_builds":
+                bool(controller.config.get("require_approval_for_mac_builds")),
+            "max_real_builds_per_project_per_day":
+                int(controller.config.get("max_real_builds_per_project_per_day")),
+            "publish_configured": bool(
+                (controller.config.get("ota_publish_dir") or "").strip()),
+            "executor": controller.config.get("default_executor"),
+            "executor_produces_real_ipa":
+                status["mac_executor"].get("produces_real_ipa", False),
+        },
+        "notes": [
+            "Ein echter Build braucht Scope 'build'; dry_run=true laeuft "
+            "kostenlos und braucht ihn nicht.",
+            "WAITING_APPROVAL heisst: ein Mensch muss zustimmen. Nicht umgehen.",
+            "BLOCKED_BY_COST_GUARD ist endgueltig - es gibt keinen "
+            "kostenpflichtigen Ausweichweg.",
+        ],
+    }
+
 
 @route("GET", "/status", AU.READ)
 def _status(h, identity, params, query):
@@ -468,6 +536,26 @@ def _artifacts(h, identity, params, query):
     }
 
 
+@route("GET", "/published", AU.READ)
+def _published(h, identity, params, query):
+    from . import publish
+
+    return HTTPStatus.OK, {"published": publish.live(h.controller.config)}
+
+
+@route("POST", r"/builds/(?P<build_id>BB-\d{8}-[A-Z0-9]{2,6}-\d{3,})/publish",
+       AU.RELEASE)
+def _publish(h, identity, params, query):
+    """Publishing reaches the outside world, so it needs the release token."""
+    from . import publish
+
+    build_id = validate_build_id(params["build_id"])
+    body = h._body()
+    result = publish.apply(h.controller, build_id,
+                           dry_run=bool(body.get("dry_run", True)))
+    return HTTPStatus.OK, result
+
+
 @route("GET", "/audit", AU.READ)
 def _audit(h, identity, params, query):
     try:
@@ -483,7 +571,7 @@ def _audit(h, identity, params, query):
 # --------------------------------------------------------------------------
 
 def serve(controller: BuildController, host: str | None = None,
-          port: int | None = None) -> BurgysServer:
+          port: int | None = None, *, worker: bool = False) -> BurgysServer:
     host = host or controller.config["api_host"]
     port = int(port if port is not None else controller.config["api_port"])
     if host not in ("127.0.0.1", "localhost", "::1"):
@@ -491,6 +579,14 @@ def serve(controller: BuildController, host: str | None = None,
             f"api_host={host!r} abgelehnt. Buergys Builds bindet nur lokal; "
             "fuer Fernzugriff einen SSH-Tunnel verwenden (docs/AGENT_API.md).")
     server = BurgysServer((host, port), controller)
+    controller._server = server
     server.tokens.ensure()
     controller.queue.recover(controller.audit)
+    # The agent reads the state file before it does anything; make sure it
+    # reflects reality from the moment the controller is up.
+    controller.publish_state(agent="controller")
+    if worker:
+        from .worker import Worker
+
+        server.worker = Worker(controller).start()
     return server

@@ -3,14 +3,14 @@
 Nur bestaetigter Zustand. Was hier steht, ist nachgeprueft.
 
 **Stand:** 2026-09-20
-**Letzter Agent:** Codex (Review)
-**Branch:** `codex/bb-review-phase1` (auf `claude/burgys-builds-ios-platform-k53703`)
+**Letzter Agent:** Codex (Agent-Anbindung)
+**Branch:** `codex/agent-ready` (auf `codex/bb-011-fetch-artifact`)
 **Start-Commit:** `514ba0f`
 
 ## Was steht
 
 - Buergys Builds v0.1 unter `burgys-builds/` - **IMPLEMENTED und TESTED**
-  (223 automatische Tests, gruen, 0 uebersprungen, reine Standardbibliothek)
+  (277 automatische Tests, gruen, 0 uebersprungen, reine Standardbibliothek)
 - Phase-1-Review durch Codex abgeschlossen: 14 Befunde, alle behoben,
   35/35 Mutanten von der Suite gefunden (vorher 22/26)
 - Bestandsaufnahme: `docs/INVENTORY.md`
@@ -40,6 +40,8 @@ Nur bestaetigter Zustand. Was hier steht, ist nachgeprueft.
 | Mutationstests | TESTED | 35 Sicherungen kaputtgemacht, 35-mal Rot |
 | Artefakt-Download | TESTED | 24 Tests gegen einen Stub der Actions-API, inkl. Ende-zu-Ende-Lauf durch den Controller; Token leakt nicht an den Umleitungs-Host, Zip-Slip und Zip-Bombe abgewehrt |
 | Retention | TESTED | raeumt auf, laesst laufende Builds und veroeffentlichte OTA-Releases in Ruhe |
+| Veroeffentlichen | TESTED | `burgys publish`, Dry Run per Default, hasht die IPA neu, wirft keine andere App von der Seite |
+| Agent-Vertrag | TESTED | `/capabilities`, `bb/agent_client.py`, typisierte Fehler, Worker, live `state.json` |
 | **Windows** | **UNGEPRUEFT** | Review lief unter Linux; `tests/windows_check.py` wartet auf den HP |
 | **Echter iOS-Build** | **NICHT ERREICHT** | kein Mac, kein freigegebener Executor |
 

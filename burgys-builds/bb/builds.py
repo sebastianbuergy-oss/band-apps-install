@@ -52,6 +52,25 @@ class BuildController:
         manifest.set_state(state, note=note, **fields)
         manifest.save(self.paths)
         self.log(manifest.build_id, f"{state}{(' - ' + note) if note else ''}")
+        # Only at the end of a build.  Refreshing on every transition put a
+        # directory scan (and, for a hosted executor, a network probe) in the
+        # middle of the hot path.
+        if S.is_terminal(state):
+            self.publish_state()
+
+    def publish_state(self, agent: str | None = None) -> None:
+        """Refresh .burgys/state.json - what the agent reads before acting.
+
+        Housekeeping must never take a build down with it, so a failure here
+        is logged and swallowed rather than raised.
+        """
+        from . import agentstate
+
+        try:
+            agentstate.update(self, agent=agent)
+        except Exception as exc:  # noqa: BLE001
+            self.audit.record(A.BUILD_STATE, actor="agentstate", result="error",
+                              detail=f"{type(exc).__name__}: {exc}"[:200])
 
     # -- lookup ---------------------------------------------------------
     def manifest_path(self, build_id: str) -> Path:
@@ -289,6 +308,7 @@ class BuildController:
                                failure_reason=str(exc)[:1000])
         manifest.save(self.paths)
         self.log(manifest.build_id, f"{state}: {exc}", level="ERROR")
+        self.publish_state()
         self.audit.record(A.BUILD_FINISHED, project=manifest.get("project"),
                           build_id=manifest.build_id, result=state,
                           executor=manifest.get("executor"), detail=str(exc)[:500])
@@ -397,9 +417,15 @@ class BuildController:
         except BaseException as exc:
             return self._fail(manifest, exc)
 
+    #: Never poll a remote executor faster than this, whatever the caller
+    #: asks for.  A zero interval against a hosted API is a way to get rate
+    #: limited or banned, and it buys nothing: a build takes minutes.
+    MIN_POLL_INTERVAL = 0.25
+
     def _await(self, executor, handle, manifest, poll_interval, max_wait_minutes):
         limit = float(max_wait_minutes if max_wait_minutes is not None
                       else self.config.get("mac_job_timeout_minutes", 30))
+        poll_interval = max(float(poll_interval), self.MIN_POLL_INTERVAL)
         deadline = time.time() + limit * 60
         while True:
             result = executor.poll(handle)
