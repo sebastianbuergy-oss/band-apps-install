@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
   "project": "burgys-builds",
-  "current_commit": "f916799c937d86c947c7a6e4fc5f81418f48f927",
+  "current_commit": "9dadc4c79699facbc717eeab9d7dd4345790459c",
   "active_tasks": [
     "BB-013",
     "BB-007",
-    "BB-005",
-    "BB-017"
+    "BB-005"
   ],
   "last_agent": "codex",
   "last_handoff": "2026-09-21 (CODEX Agent-Anbindung)",
