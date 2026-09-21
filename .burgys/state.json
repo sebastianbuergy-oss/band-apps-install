@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "project": "burgys-builds",
-  "current_commit": "0f6607a68a1b554ca644b5fd97aa1336de83e60b",
+  "current_commit": "f916799c937d86c947c7a6e4fc5f81418f48f927",
   "active_tasks": [
     "BB-013",
     "BB-007",
