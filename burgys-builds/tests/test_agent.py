@@ -284,6 +284,37 @@ class TestAgentState(ControllerCase):
         data = json.loads(target.read_text(encoding="utf-8"))
         self.assertEqual(data["builds"]["last_success"]["artifact_sha256"], sha)
 
+    def test_a_test_run_never_writes_the_repositorys_own_state_file(self):
+        """This went wrong once: test values ended up committed as fact.
+
+        The repository's .burgys/state.json is what Claude, Codex and the
+        agent read before they act. A test run writing fixture values into
+        it - `mac_executor_name: "github"`, a fixture build listed as
+        running - turns that file into fiction.
+        """
+        repo_state = agentstate._repo_root(self.controller.paths) / ".burgys" / "state.json"
+        configured = agentstate.state_path(self.controller.config,
+                                           self.controller.paths)
+        self.assertNotEqual(configured.resolve(), repo_state.resolve(),
+                            "a test must not be pointed at the real state file")
+        self.assertTrue(str(configured).startswith(str(self.tmp)),
+                        f"state file {configured} is outside the test's tmp dir")
+
+        before = repo_state.read_bytes() if repo_state.exists() else None
+        manifest = self.controller.request_build(
+            "testapp", "AD_HOC", requested_by="s", dry_run=True)
+        self.controller.run_next(poll_interval=0)
+        self.controller.publish_state(agent="test")
+        after = repo_state.read_bytes() if repo_state.exists() else None
+        self.assertEqual(before, after,
+                         "the repository's state.json was modified by a test")
+
+    def test_the_default_location_is_the_repository_file(self):
+        """Without configuration it must still be the shared file (section 18)."""
+        default = agentstate.state_path({}, self.controller.paths)
+        self.assertEqual(default.name, "state.json")
+        self.assertEqual(default.parent.name, ".burgys")
+
     def test_a_broken_state_write_never_kills_a_build(self):
         from unittest import mock
 

@@ -125,6 +125,22 @@ bleiben erhalten - die Maschine ueberschreibt nur, was sie selbst beobachtet.
 `cost_guard: true` heisst: der Guard ist **aktiv**, kostenpflichtige Dienste
 sind gesperrt.
 
+**Zwei Haelften, ein File.** `system_status` und `builds` schreibt der
+Controller zur Laufzeit, auf dem Rechner, auf dem er laeuft. Alles andere
+(`active_tasks`, `notes`, Entscheidungen) ist Handarbeit und bleibt erhalten.
+
+Was im Git steht, ist deshalb bewusst leer: `windows_controller:
+"NIE_AUSGEFUEHRT"`. Ein Schnappschuss aus einer Cloud-Sitzung oder aus einem
+Testlauf, der als Tatsache eingecheckt wird, ist schlimmer als kein
+Schnappschuss - er liest sich wie Wahrheit. Sobald Buergys Builds auf dem HP
+laeuft, ueberschreibt er diese Haelfte mit echten Werten; ob Sebastian den
+Stand committet, ist seine Entscheidung.
+
+Nebeneffekt, den man kennen sollte: laeuft der Controller im Repo-Verzeichnis,
+macht jeder abgeschlossene Build das Arbeitsverzeichnis schmutzig. Das ist
+gewollt (Abschnitt 18 will die Datei im Repo), aber es heisst, dass `git
+status` nach einem Build nicht sauber ist.
+
 ## Was der Agent nie tun soll
 
 - Einen Build starten, den `capabilities()` als nicht erlaubt meldet
