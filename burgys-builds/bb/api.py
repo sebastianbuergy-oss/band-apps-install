@@ -34,6 +34,11 @@ from .ratelimit import RateLimiter
 from .redact import redact
 from .store import disk_status
 
+#: Bumped when a response shape changes in a way a client must notice.
+#: Buergys Agent pins against this: it is in the body of every response and
+#: in the ``X-Burgys-API-Version`` header of every response, errors included.
+API_VERSION = 1
+
 MAX_BODY = 64 * 1024
 SESSION_TTL = 8 * 3600
 
@@ -129,6 +134,10 @@ class BurgysHandler(BaseHTTPRequestHandler):
 
     def _send(self, status: int, payload, *, content_type="application/json; charset=utf-8",
               extra_headers: dict | None = None) -> None:
+        if isinstance(payload, dict):
+            # Every JSON response carries the version, so a client never has
+            # to guess which contract it is talking to.
+            payload = {"api_version": API_VERSION, **payload}
         if isinstance(payload, (dict, list)):
             body = json.dumps(redact(payload), ensure_ascii=False, indent=2).encode("utf-8")
         elif isinstance(payload, str):
@@ -138,6 +147,7 @@ class BurgysHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Burgys-API-Version", str(API_VERSION))
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cache-Control", "no-store")
@@ -398,7 +408,6 @@ def _capabilities(h, identity, params, query):
     return HTTPStatus.OK, {
         "service": "burgys-builds",
         "version": __version__,
-        "schema_version": 1,
         "identity": {"name": identity.get("name"), "scopes": mine},
         "routes": sorted(routes, key=lambda r: (r["path"], r["method"])),
         "build_states": list(S.ALL),
@@ -439,7 +448,8 @@ def _queue(h, identity, params, query):
 
 @route("GET", "/projects", AU.READ)
 def _projects(h, identity, params, query):
-    return HTTPStatus.OK, [p.to_dict() for p in h.controller.registry.all()]
+    return HTTPStatus.OK, {"projects": [p.to_dict()
+                                        for p in h.controller.registry.all()]}
 
 
 @route("GET", r"/projects/(?P<project_id>[a-z0-9-]{1,50})", AU.READ)

@@ -77,6 +77,65 @@ class TestCapabilities(AgentCase):
             self.assertEqual(exc.code, 401)
 
 
+class TestApiVersion(AgentCase):
+    """Buergys Agent pins against this, so it has to be everywhere."""
+
+    def _raw(self, path, token=None):
+        import urllib.error
+        import urllib.request
+        req = urllib.request.Request(
+            self.url + path,
+            headers={"Authorization": f"Bearer {token}"} if token else {})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return resp.status, dict(resp.headers), json.loads(resp.read().decode())
+        except urllib.error.HTTPError as exc:
+            raw = exc.read().decode()
+            return exc.code, dict(exc.headers), (json.loads(raw) if raw.strip().startswith("{") else {})
+
+    def test_every_route_answers_with_the_version_in_the_body(self):
+        from bb.api import API_VERSION
+
+        token = self.tokens["release"]
+        for path in ("/health", "/capabilities", "/status", "/queue", "/projects",
+                     "/projects/testapp", "/audit", "/published"):
+            _, _, body = self._raw(path, token)
+            self.assertEqual(body.get("api_version"), API_VERSION, path)
+
+    def test_the_header_carries_it_too_even_on_errors(self):
+        from bb.api import API_VERSION
+
+        for path, token in (("/health", None), ("/status", None),        # 401
+                            ("/gibt-es-nicht", self.tokens["agent"]),     # 404
+                            ("/status", self.tokens["agent"])):           # 200
+            _, headers, _ = self._raw(path, token)
+            self.assertEqual(headers.get("X-Burgys-API-Version"),
+                             str(API_VERSION), path)
+
+    def test_error_bodies_carry_the_version(self):
+        from bb.api import API_VERSION
+
+        status, _, body = self._raw("/status")
+        self.assertEqual(status, 401)
+        self.assertEqual(body.get("api_version"), API_VERSION)
+
+    def test_every_response_is_an_object_not_a_bare_list(self):
+        """A top-level array has nowhere to put a version."""
+        for path in ("/projects", "/audit", "/published", "/queue"):
+            _, _, body = self._raw(path, self.tokens["agent"])
+            self.assertIsInstance(body, dict, path)
+
+    def test_the_client_notices_a_version_it_was_not_written_for(self):
+        from unittest import mock
+
+        bb = self.client()
+        self.assertEqual(bb.check_api_version(), bb.EXPECTED_API_VERSION)
+        with mock.patch.object(bb, "capabilities", return_value={"api_version": 99}):
+            from bb.agent_client import BurgysError
+            with self.assertRaises(BurgysError):
+                bb.check_api_version()
+
+
 class TestClient(AgentCase):
     def test_health_needs_no_token(self):
         self.assertEqual(BurgysClient(self.url, token="irrelevant").health()["status"], "ok")
@@ -327,3 +386,91 @@ class TestAgentState(ControllerCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDocumentedShapes(AgentCase):
+    """The response shapes Buergys Agent builds against.
+
+    docs/AGENT_API_TYPES.md is a contract someone writes TypeScript from.
+    A contract nobody checks drifts, so the top-level keys are pinned here:
+    change a shape and this test makes you update the document too.
+    """
+
+    EXPECTED = {
+        "/health": {"api_version", "service", "status"},
+        "/capabilities": {"api_version", "service", "version", "identity",
+                          "routes", "build_states", "terminal_states", "modes",
+                          "projects", "policy", "notes"},
+        "/status": {"api_version", "windows_controller", "mac_executor",
+                    "mac_executors_per_project", "cost_guard", "queue",
+                    "builds_today", "disk", "retention", "worker"},
+        "/queue": {"api_version", "waiting", "running", "length", "updated_at"},
+        "/projects": {"api_version", "projects"},
+        "/projects/testapp": {"api_version", "project", "limit", "builds"},
+        "/audit": {"api_version", "entries"},
+        "/published": {"api_version", "published"},
+    }
+
+    MANIFEST_KEYS = {
+        "api_version", "schema_version", "build_id", "project", "project_name",
+        "repository", "branch", "commit", "version", "build_number", "bundle_id",
+        "mode", "requested_by", "status", "display_status", "executor", "dry_run",
+        "reused_from", "artifact_sha256", "artifact_path", "artifact_bytes",
+        "created_at", "updated_at", "finished_at", "failure_reason", "approval",
+        "preflight", "mac_minutes", "windows_seconds", "ota", "state_history",
+        "state_history_states",
+    }
+
+    def test_documented_top_level_keys_match_reality(self):
+        bb = self.client("release")
+        raw = {
+            "/health": bb.health(),
+            "/capabilities": bb.capabilities(),
+            "/status": bb._call("GET", "/status"),
+            "/queue": bb._call("GET", "/queue"),
+            "/projects": bb._call("GET", "/projects"),
+            "/projects/testapp": bb._call("GET", "/projects/testapp"),
+            "/audit": bb._call("GET", "/audit"),
+            "/published": bb._call("GET", "/published"),
+        }
+        for path, expected in self.EXPECTED.items():
+            self.assertEqual(
+                set(raw[path]), expected,
+                f"{path} changed shape - update docs/AGENT_API_TYPES.md")
+
+    def test_the_build_manifest_shape_is_pinned(self):
+        bb = self.client("release")
+        manifest = bb.request_build("testapp", dry_run=True)
+        self.assertEqual(
+            set(manifest), self.MANIFEST_KEYS,
+            "BuildManifest changed - update docs/AGENT_API_TYPES.md")
+        final = bb.wait_for(manifest["build_id"], interval=0.2, timeout=60)
+        self.assertEqual(set(final), self.MANIFEST_KEYS)
+
+    def test_the_preflight_report_shape_is_pinned(self):
+        report = self.client()._call("POST", "/preflight", {"project": "testapp"})
+        self.assertEqual(
+            set(report),
+            {"api_version", "project", "mode", "at", "ok", "summary", "results"})
+        self.assertEqual(set(report["summary"]), {"pass", "fail", "warn", "skip"})
+        for result in report["results"]:
+            self.assertEqual(set(result), {"check", "status", "message", "detail"})
+
+    def test_the_documented_states_are_the_real_ones(self):
+        """A client switches on these strings."""
+        caps = self.client().capabilities()
+        self.assertEqual(sorted(caps["build_states"]), sorted(S.ALL))
+        self.assertEqual(
+            sorted(caps["terminal_states"]),
+            sorted({"SUCCESS", "FAILED", "BLOCKED", "BLOCKED_BY_COST_GUARD",
+                    "CANCELLED"}))
+
+    def test_a_dry_run_is_never_presented_as_a_real_build(self):
+        """The one field a client must show instead of `status`."""
+        bb = self.client("release")
+        build = bb.request_build("testapp", dry_run=True)
+        final = bb.wait_for(build["build_id"], interval=0.2, timeout=60)
+        self.assertEqual(final["status"], S.SUCCESS)
+        self.assertIn("DRY RUN", final["display_status"])
+        self.assertIsNone(final["artifact_sha256"])
+        self.assertIsNone(final["ota"])

@@ -21,7 +21,8 @@ Ein Agent aendert nur, was er selbst geclaimt hat.
 | BB-014 | Geschuetzte Umgebung `ios-signing` im App-Repo anlegen (Required Reviewers) | BLOCKED | wartet auf Freigabe |
 | BB-015 | Export-Methode beim ersten Lauf pruefen (`ad-hoc` vs `release-testing`) | TODO | offen bis erster Lauf |
 | BB-016 | Agent-Vertrag: `/capabilities`, `bb/agent_client.py`, Worker, live `state.json` | DONE | Codex |
-| BB-017 | Rueckmeldung der Buergys-Agent-Session einarbeiten | TODO | Codex (wartet auf Antwort) |
+| BB-017 | Rueckmeldung der Buergys-Agent-Session einarbeiten | DONE | Codex |
+| BB-018 | Status-Events pro Build (SSE oder Long-Poll) statt Polling | TODO | frei, wenn Polling nicht mehr reicht |
 
 ## Hinweise zu einzelnen Aufgaben
 
@@ -35,6 +36,18 @@ anderen Ende und Sebastians Freigabe.
 Suite von 137 auf 186 Tests. Die Mutationspruefung (35 Sicherungen einzeln
 kaputtmachen) steht als Werkzeug bereit und sollte vor jedem groesseren Merge
 wiederholt werden.
+
+**BB-017** ist erledigt. Buergys Agent ist Electron/TypeScript und spricht die
+HTTP-API direkt, nicht den Python-Client. Gewuenscht und umgesetzt: eine
+API-Versionsnummer in jeder Antwort und die exakten JSON-Formen als Vertrag
+(`docs/AGENT_API_TYPES.md`). Ausdruecklich bestaetigt: zwei Tokens sind
+richtig, Buergys bekommt nur `agent`, das `release`-Token kommt nie in den
+Agenten. `.burgys/state.json` liest der Agent nicht - die Datei bleibt fuer
+Claude und Codex.
+
+**BB-018** ist ein Wunsch fuer spaeter, kein Mangel: Polling reicht fuer den
+Start, Events waeren fuer die Live-Ansicht auf dem Handy schoen. Nicht auf
+Vorrat bauen.
 
 **BB-013** ist der wichtigste offene Punkt: bis das Skript auf dem HP gelaufen
 ist, ist die Windows-Tauglichkeit eine Behauptung, keine Messung.

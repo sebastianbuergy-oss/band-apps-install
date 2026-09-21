@@ -51,6 +51,19 @@ Authorization: Bearer <token>
 Agent-Token kommt eine 400 mit dem Hinweis, dass `dry_run: true` kostenlos
 durchlaeuft.
 
+## Exakte Antwortformen
+
+`AGENT_API_TYPES.md` haelt jede Antwortform als TypeScript fest, samt
+Statuscodes und den drei Stellen, an denen man sich leicht vertut. Das ist
+der Vertrag fuer Clients, die direkt HTTP sprechen.
+
+Zwei Zusicherungen, auf die man sich verlassen kann:
+
+- **Jede Antwort ist ein Objekt** und traegt `api_version` im Body sowie
+  `X-Burgys-API-Version` im Header - auch Fehlerantworten.
+- Die Version steigt nur, wenn sich eine Form so aendert, dass ein Client es
+  merken muss. Aktuell **1**.
+
 ## Beispiel
 
 ```bash

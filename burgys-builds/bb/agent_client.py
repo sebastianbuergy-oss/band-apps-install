@@ -162,8 +162,21 @@ class BurgysClient:
     def queue(self) -> dict:
         return self._call("GET", "/queue")
 
+    #: The API version this client was written against.  A server reporting
+    #: something else may have changed a shape underneath us.
+    EXPECTED_API_VERSION = 1
+
     def projects(self) -> list:
-        return self._call("GET", "/projects")
+        return self._call("GET", "/projects")["projects"]
+
+    def check_api_version(self) -> int:
+        """Return the server's API version, complaining if it is unexpected."""
+        version = int(self.capabilities().get("api_version", 0))
+        if version != self.EXPECTED_API_VERSION:
+            raise BurgysError(
+                f"Buergys Builds spricht API-Version {version}, dieser Client "
+                f"erwartet {self.EXPECTED_API_VERSION}")
+        return version
 
     def project(self, project_id: str) -> dict:
         return self._call("GET", f"/projects/{project_id}")
