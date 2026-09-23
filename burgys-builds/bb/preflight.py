@@ -115,12 +115,21 @@ def run(project: Project, mode: str = MODE_AD_HOC, *,
     add("assets.web", lambda: _check_web_assets(project))
     add("feed.json", lambda: _check_feed(project))
     add("version.build_number", lambda: _check_version(project))
-    add("project.preflight_script", lambda: _run_project_preflight(project))
+    results.extend(_eigene_schritte(project))
     results.append(_check_signing(project, mode))
     return PreflightReport(project.id, mode, results)
 
 
 # -- individual checks ------------------------------------------------------
+
+def _eigene_schritte(project: Project) -> list:
+    """Wie `add`, aber fuer die mehreren eigenen Pruefschritte eines Projekts."""
+    try:
+        return _run_project_preflight(project)
+    except Exception as exc:  # ein kaputter Schritt ist ein roter Schritt, kein Absturz
+        return [Result("project.preflight_script", FAIL, f"Pruefung abgebrochen: {exc}")]
+
+
 
 #: Projektarten, deren iOS-Teil von Flutter erzeugt wird. Dort gibt es kein project.yml.
 FLUTTER_ARTEN = ("flutter",)
@@ -384,27 +393,47 @@ def _check_version(project: Project) -> Result:
                   detail)
 
 
-def _run_project_preflight(project: Project) -> Result:
-    cmd = list(project.preflight_command or [])
-    if not cmd:
-        return Result("project.preflight_script", SKIP, "kein eigenes Preflight-Script konfiguriert")
+def _preflight_befehle(project: Project) -> list:
+    """Ein Befehl oder mehrere. Alt: ["flutter","analyze"]. Neu zusaetzlich:
+    [["flutter","analyze"],["flutter","test"]] - jeder Schritt wird einzeln gemeldet."""
+    roh = project.preflight_command or []
+    if not roh:
+        return []
+    if all(isinstance(x, (list, tuple)) for x in roh):
+        return [list(x) for x in roh if x]
+    return [list(roh)]
+
+
+def _einen_befehl(project: Project, cmd: list, name: str) -> Result:
     exe = shutil.which(cmd[0])
     if not exe:
-        return Result("project.preflight_script", WARN,
-                      f"{cmd[0]} ist nicht installiert - eigenes Preflight des Projekts "
-                      "wurde nicht ausgefuehrt")
+        return Result(name, WARN,
+                      f"{cmd[0]} ist nicht installiert - dieser Schritt wurde nicht ausgefuehrt")
     try:
         res = subprocess.run([exe, *cmd[1:]], cwd=str(project.path()),
-                             capture_output=True, text=True, timeout=300, check=False)
+                             capture_output=True, text=True, timeout=900, check=False)
     except subprocess.TimeoutExpired:
-        return Result("project.preflight_script", FAIL, "Preflight-Script hat das Zeitlimit ueberschritten")
+        return Result(name, FAIL, f"{' '.join(cmd)} hat das Zeitlimit ueberschritten")
     from .redact import redact_text
 
     tail = redact_text((res.stdout + res.stderr).strip())[-2000:]
     if res.returncode != 0:
-        return Result("project.preflight_script", FAIL,
+        return Result(name, FAIL,
                       f"{' '.join(cmd)} endete mit Code {res.returncode}", {"output": tail})
-    return Result("project.preflight_script", PASS, f"{' '.join(cmd)} OK", {"output": tail})
+    return Result(name, PASS, f"{' '.join(cmd)} OK", {"output": tail})
+
+
+def _run_project_preflight(project: Project) -> list:
+    """Die eigenen Pruefschritte des Projekts. Gibt eine Liste zurueck, damit ein roter
+    Schritt die anderen nicht verdeckt - jeder Schritt steht einzeln im Bericht."""
+    befehle = _preflight_befehle(project)
+    if not befehle:
+        return [Result("project.preflight_script", SKIP,
+                       "kein eigenes Preflight-Script konfiguriert")]
+    if len(befehle) == 1:
+        return [_einen_befehl(project, befehle[0], "project.preflight_script")]
+    return [_einen_befehl(project, cmd, f"project.preflight_script[{i + 1}]")
+            for i, cmd in enumerate(befehle)]
 
 
 def _check_signing(project: Project, mode: str) -> Result:

@@ -132,8 +132,14 @@
     "marketing_version": "1.0.0",
     "team_id": "38A4N26LD5",
     "preflight_command": [
-      "flutter",
-      "analyze"
+      [
+        "flutter",
+        "analyze"
+      ],
+      [
+        "flutter",
+        "test"
+      ]
     ],
     "required_files": [
       "pubspec.yaml",
