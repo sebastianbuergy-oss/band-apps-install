@@ -5,7 +5,7 @@
     "code": "TG",
     "repository": "https://github.com/sebastianbuergy-oss/thy-gnosis-ios",
     "branch": "main",
-    "local_path": "",
+    "local_path": "C:\\Users\\Sebas\\OneDrive\\Dokumente\\Claude\\thy-gnosis-ios",
     "kind": "xcodegen-webview",
     "bundle_id": "com.sebastianbuergy.thygnosis",
     "scheme": "ThyGnosis",
@@ -13,7 +13,11 @@
     "display_name": "Thy Gnosis",
     "marketing_version": "1.0",
     "team_id": "38A4N26LD5",
-    "preflight_command": ["npm", "run", "check"],
+    "preflight_command": [
+      "npm",
+      "run",
+      "check"
+    ],
     "required_files": [
       "project.yml",
       "codemagic.yaml",
@@ -47,7 +51,10 @@
       "ipa": "thy-gnosis.ipa",
       "icon": "thy-gnosis-icon.png"
     },
-    "modes": ["AD_HOC", "APP_STORE_RELEASE"],
+    "modes": [
+      "AD_HOC",
+      "APP_STORE_RELEASE"
+    ],
     "migration_state": "CODEMAGIC_ACTIVE",
     "enabled": true
   },
@@ -57,7 +64,7 @@
     "code": "DOR",
     "repository": "https://github.com/sebastianbuergy-oss/days-of-ruin-ios",
     "branch": "main",
-    "local_path": "",
+    "local_path": "C:\\Users\\Sebas\\OneDrive\\Dokumente\\Claude\\days-of-ruin-ios",
     "kind": "xcodegen-webview",
     "bundle_id": "com.sebastianbuergy.daysofruin",
     "scheme": "DaysOfRuin",
@@ -65,7 +72,11 @@
     "display_name": "Days of Ruin",
     "marketing_version": "1.0",
     "team_id": "38A4N26LD5",
-    "preflight_command": ["npm", "run", "check"],
+    "preflight_command": [
+      "npm",
+      "run",
+      "check"
+    ],
     "required_files": [
       "project.yml",
       "codemagic.yaml",
@@ -99,8 +110,42 @@
       "ipa": "days-of-ruin.ipa",
       "icon": "days-of-ruin-icon.png"
     },
-    "modes": ["AD_HOC", "APP_STORE_RELEASE"],
+    "modes": [
+      "AD_HOC",
+      "APP_STORE_RELEASE"
+    ],
     "migration_state": "CODEMAGIC_ACTIVE",
+    "enabled": true
+  },
+  {
+    "id": "spielekiste",
+    "name": "Spielekiste",
+    "code": "SPK",
+    "repository": "",
+    "branch": "master",
+    "local_path": "C:\\Users\\Sebas\\Projects\\Spielekiste",
+    "kind": "flutter",
+    "bundle_id": "ch.buergys.spielekiste",
+    "scheme": "Runner",
+    "xcodeproj": "ios/Runner.xcodeproj",
+    "display_name": "Spielekiste",
+    "marketing_version": "1.0.0",
+    "team_id": "38A4N26LD5",
+    "preflight_command": [
+      "flutter",
+      "analyze"
+    ],
+    "required_files": [
+      "pubspec.yaml",
+      "lib/main.dart",
+      "test/widget_test.dart"
+    ],
+    "signing": {},
+    "ota": {},
+    "modes": [
+      "AD_HOC"
+    ],
+    "migration_state": "BURGYS_BUILDS_PARALLEL",
     "enabled": true
   }
 ]

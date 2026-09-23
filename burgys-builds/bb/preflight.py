@@ -122,6 +122,36 @@ def run(project: Project, mode: str = MODE_AD_HOC, *,
 
 # -- individual checks ------------------------------------------------------
 
+#: Projektarten, deren iOS-Teil von Flutter erzeugt wird. Dort gibt es kein project.yml.
+FLUTTER_ARTEN = ("flutter",)
+
+
+def _ist_flutter(project: Project) -> bool:
+    return str(getattr(project, "kind", "")).lower() in FLUTTER_ARTEN
+
+
+def _pbxproj_bundle_ids(project: Project) -> list:
+    """Alle Bundle-IDs aus dem Xcode-Projekt, ohne die der Testziele."""
+    pfad = project.resolve_in_project("ios/Runner.xcodeproj/project.pbxproj")
+    if not pfad.exists():
+        return []
+    text = pfad.read_text(encoding="utf-8", errors="replace")
+    gefunden = re.findall(r"PRODUCT_BUNDLE_IDENTIFIER\s*=\s*([^;]+);", text)
+    sauber = [w.strip().strip('"') for w in gefunden]
+    return [w for w in sauber if not w.endswith("Tests")]
+
+
+def _plist_wert(project: Project, schluessel: str) -> str | None:
+    """Den Wert eines Schluessels aus Info.plist lesen - der <string> direkt nach dem <key>."""
+    pfad = project.resolve_in_project("ios/Runner/Info.plist")
+    if not pfad.exists():
+        return None
+    text = pfad.read_text(encoding="utf-8", errors="replace")
+    treffer = re.search(
+        r"<key>" + re.escape(schluessel) + r"</key>\s*<string>([^<]*)</string>", text)
+    return treffer.group(1).strip() if treffer else None
+
+
 def _check_mode(project: Project, mode: str) -> Result:
     if not project.supports(mode):
         return Result("project.mode", FAIL,
@@ -192,6 +222,18 @@ def _check_required(project: Project) -> Result:
 def _check_bundle_id(project: Project) -> Result:
     if not project.bundle_id:
         return Result("config.bundle_id", SKIP, "keine Bundle ID konfiguriert")
+    if _ist_flutter(project):
+        gefunden = _pbxproj_bundle_ids(project)
+        if not gefunden:
+            return Result("config.bundle_id", FAIL,
+                          "ios/Runner.xcodeproj/project.pbxproj fehlt oder nennt keine "
+                          "PRODUCT_BUNDLE_IDENTIFIER")
+        if project.bundle_id not in gefunden:
+            return Result("config.bundle_id", FAIL,
+                          f"Das Xcode-Projekt sagt {gefunden[0]}, Buergys Builds erwartet "
+                          f"{project.bundle_id} - Widerspruch, kein Build",
+                          {"im_projekt": gefunden, "expected": project.bundle_id})
+        return Result("config.bundle_id", PASS, project.bundle_id)
     pj = project.resolve_in_project("project.yml")
     if not pj.exists():
         return Result("config.bundle_id", FAIL, "project.yml fehlt")
@@ -208,6 +250,18 @@ def _check_bundle_id(project: Project) -> Result:
 
 
 def _check_display_name(project: Project) -> Result:
+    if _ist_flutter(project):
+        wert = _plist_wert(project, "CFBundleDisplayName")
+        if wert is None:
+            return Result("config.display_name", WARN,
+                          "kein CFBundleDisplayName in ios/Runner/Info.plist")
+        if wert.startswith("$("):
+            return Result("config.display_name", WARN,
+                          f"Anzeigename kommt aus einer Xcode-Variable ({wert})")
+        if wert != project.display_name:
+            return Result("config.display_name", FAIL,
+                          f"Anzeigename {wert!r} statt {project.display_name!r}")
+        return Result("config.display_name", PASS, wert)
     pj = project.resolve_in_project("project.yml")
     if not pj.exists():
         return Result("config.display_name", SKIP, "project.yml fehlt")
@@ -228,6 +282,9 @@ _CSS_URL = re.compile(r"url\(([^)]+)\)")
 
 
 def _check_web_assets(project: Project) -> Result:
+    if _ist_flutter(project):
+        return Result("assets.web", SKIP,
+                      "Flutter bringt seine Oberflaeche selbst mit - keine Web-Dateien zu pruefen")
     index = project.resolve_in_project("web/index.html")
     if not index.exists():
         return Result("assets.web", FAIL, "web/index.html fehlt")
@@ -290,6 +347,22 @@ def _check_feed(project: Project) -> Result:
 
 
 def _check_version(project: Project) -> Result:
+    if _ist_flutter(project):
+        pub = project.resolve_in_project("pubspec.yaml")
+        if not pub.exists():
+            return Result("version.build_number", FAIL, "pubspec.yaml fehlt")
+        treffer = re.search(r"^version:\s*([\d.]+)(?:\+(\d+))?",
+                            pub.read_text(encoding="utf-8", errors="replace"), re.M)
+        if not treffer:
+            return Result("version.build_number", FAIL, "pubspec.yaml nennt keine version")
+        detail = {"marketing_version": treffer.group(1), "pubspec_build_number": treffer.group(2)}
+        if project.marketing_version and treffer.group(1) != project.marketing_version:
+            return Result("version.build_number", WARN,
+                          f"pubspec.yaml sagt {treffer.group(1)}, Registry sagt "
+                          f"{project.marketing_version}", detail)
+        return Result("version.build_number", PASS,
+                      f"Version {treffer.group(1)}, Buildnummer wird von Buergys Builds vergeben",
+                      detail)
     pj = project.resolve_in_project("project.yml")
     if not pj.exists():
         return Result("version.build_number", SKIP, "project.yml fehlt")
