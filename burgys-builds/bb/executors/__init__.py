@@ -129,7 +129,7 @@ def _load_backends() -> None:
     Done lazily and in one place: importing them at module scope would make
     :mod:`bb.executors` and its own submodules import each other.
     """
-    from . import dryrun, github, local, none  # noqa: F401  (registration)
+    from . import codemagic, dryrun, github, local, none  # noqa: F401  (registration)
 
 
 def available_executors() -> list:

@@ -89,7 +89,17 @@ RESOURCES: dict[str, dict[str, Any]] = {
         "cost": FREE,
         "note": "OTA hosting for public repos.",
     },
-    "codemagic": {"cost": PAID, "note": "Die Kosten, die wir loswerden wollen."},
+    "codemagic": {
+        "cost": PAID,
+        "note": "Mac-mini-M2-Instanzen. 500 Gratis-Minuten pro Monat fuer den "
+                "persoenlichen Gebrauch, danach kostenpflichtig. Stand 23.09.2026 in "
+                "Sebastians Konto: 505/500 Minuten verbraucht, offener Saldo 53.68 USD, "
+                "Vormonat 84.08 USD bezahlt. Der Executor meldet jede Minute zurueck, "
+                "damit der Gratis-Anteil nicht wieder unbemerkt aufgebraucht wird. Bis "
+                "ein eigener Mac dasteht, ist das der eingeplante Weg - nicht der, den "
+                "wir vermeiden.",
+        "free_minutes_per_month": 500,
+    },
     "xcode_cloud": {"cost": PAID, "note": "Free tier exists but is account bound."},
     "macstadium": {"cost": PAID, "note": "Cloud Mac."},
     "aws_mac": {"cost": PAID, "note": "24h minimum allocation."},
