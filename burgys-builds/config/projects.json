@@ -119,16 +119,16 @@
   },
   {
     "id": "spielekiste",
-    "name": "Spielekiste",
+    "name": "Buergys Spielchischte",
     "code": "SPK",
-    "repository": "",
-    "branch": "master",
+    "repository": "https://github.com/sebastianbuergy-oss/spielchischte-ios",
+    "branch": "main",
     "local_path": "C:\\Users\\Sebas\\Projects\\Spielekiste",
     "kind": "flutter",
     "bundle_id": "ch.buergys.spielekiste",
     "scheme": "Runner",
     "xcodeproj": "ios/Runner.xcodeproj",
-    "display_name": "Spielekiste",
+    "display_name": "Spielchischte",
     "marketing_version": "1.0.0",
     "team_id": "38A4N26LD5",
     "preflight_command": [
@@ -144,14 +144,32 @@
     "required_files": [
       "pubspec.yaml",
       "lib/main.dart",
-      "test/widget_test.dart"
+      "test/widget_test.dart",
+      "codemagic.yaml"
     ],
-    "signing": {},
+    "signing": {
+      "APP_STORE_RELEASE": {
+        "profile_name": "Spielchischte ios_app_store 20260924",
+        "certificate_common_name": "Apple Distribution: Sebastian Brgy (38A4N26LD5)",
+        "expires": "2027-08-14",
+        "certificate_expires": "2027-08-14",
+        "expects_provisioned_devices": false,
+        "app_store_apple_id": "6815511058"
+      }
+    },
     "ota": {},
     "modes": [
-      "AD_HOC"
+      "APP_STORE_RELEASE"
     ],
     "migration_state": "BURGYS_BUILDS_PARALLEL",
-    "enabled": true
+    "enabled": true,
+    "executor": "codemagic",
+    "executor_config": {
+      "app_id": "6ab4a67a91835fcf2aabddf6",
+      "workflow_id": "ios-testflight",
+      "branch": "main",
+      "token_file": "C:/Users/Sebas/.burgys/codemagic_token",
+      "instance_type": "mac_mini_m2"
+    }
   }
 ]

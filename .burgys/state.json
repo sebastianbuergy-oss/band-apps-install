@@ -7,15 +7,14 @@
     "BB-007",
     "BB-005"
   ],
-  "last_agent": "codex",
+  "last_agent": "controller",
   "last_handoff": "2026-09-21 (CODEX Agent-Anbindung)",
   "system_status": {
-    "_hinweis": "Diese Haelfte schreibt der Controller zur Laufzeit auf dem Rechner, auf dem er laeuft (bb/agentstate.py). Der hier eingecheckte Stand ist bewusst leer: auf Sebastians HP lief Buergys Builds noch nie.",
-    "windows_controller": "NIE_AUSGEFUEHRT",
-    "mac_executor_name": null,
+    "windows_controller": "ONLINE",
+    "mac_executor_name": "none",
     "mac_executor_produces_real_ipa": false,
     "cost_guard": true,
-    "disk": null
+    "disk": "OK"
   },
   "pilot": {
     "project": "thy-gnosis",
@@ -42,9 +41,8 @@
       "BB-016 Agent-Vertrag"
     ]
   },
-  "updated_at": null,
+  "updated_at": "2026-09-23T20:38:12",
   "builds": {
-    "_hinweis": "Ebenfalls zur Laufzeit geschrieben. Noch kein Build auf dem HP.",
     "today": {
       "total": 0,
       "success": 0,

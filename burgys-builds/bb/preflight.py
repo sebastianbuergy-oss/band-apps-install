@@ -115,6 +115,7 @@ def run(project: Project, mode: str = MODE_AD_HOC, *,
     add("assets.web", lambda: _check_web_assets(project))
     add("feed.json", lambda: _check_feed(project))
     add("version.build_number", lambda: _check_version(project))
+    add("flutter.paketkonflikt", lambda: _check_paketkonflikt(project))
     results.extend(_eigene_schritte(project))
     results.append(_check_signing(project, mode))
     return PreflightReport(project.id, mode, results)
@@ -391,6 +392,53 @@ def _check_version(project: Project) -> Result:
     return Result("version.build_number", PASS,
                   f"Version {marketing.group(1)}, Buildnummer wird von Buergys Builds vergeben",
                   detail)
+
+
+#: Flutter-Pakete, die es nur als CocoaPod gibt.
+NUR_COCOAPODS = ("google_mobile_ads",)
+
+#: Flutter-Pakete, die inzwischen als Swift Package ausgeliefert werden.
+ALS_SWIFT_PAKET = ("webview_flutter_wkwebview",)
+
+#: Der Schalter, mit dem Flutter den Swift Package Manager wieder ausschaltet.
+SPM_AUS = "--no-enable-swift-package-manager"
+
+
+def _check_paketkonflikt(project: Project) -> Result:
+    """CocoaPods und Swift Package Manager im selben Flutter-Projekt.
+
+    "pod install" bricht ab, sobald ein Paket nur als CocoaPod vorliegt und ein
+    anderes als Swift Package. Das kostet auf dem Mac echte Minuten fuer einen
+    Fehler, der hier in zwei Dateien steht.
+    """
+    if not _ist_flutter(project):
+        return Result("flutter.paketkonflikt", SKIP,
+                      "kein Flutter-Projekt - CocoaPods spielen hier keine Rolle")
+    root = project.path()
+    sperre = root / "pubspec.lock"
+    if not sperre.exists():
+        return Result("flutter.paketkonflikt", WARN,
+                      "pubspec.lock fehlt - die Pakete lassen sich nicht pruefen")
+    inhalt = sperre.read_text(encoding="utf-8", errors="replace")
+    pods = [n for n in NUR_COCOAPODS if f"\n  {n}:" in inhalt]
+    swift = [n for n in ALS_SWIFT_PAKET if f"\n  {n}:" in inhalt]
+    if not pods or not swift:
+        return Result("flutter.paketkonflikt", PASS,
+                      "keine Mischung aus CocoaPods-only und Swift-Paket")
+
+    konfig = root / "codemagic.yaml"
+    text = konfig.read_text(encoding="utf-8", errors="replace") if konfig.exists() else ""
+    if SPM_AUS in text:
+        return Result("flutter.paketkonflikt", PASS,
+                      f"{pods[0]} und {swift[0]} zusammen, aber Swift Package Manager ist "
+                      "im Build ausgeschaltet",
+                      {"cocoapods": pods, "swift": swift})
+    return Result(
+        "flutter.paketkonflikt", FAIL,
+        f"{pods[0]} gibt es nur als CocoaPod, {swift[0]} kommt als Swift Package - "
+        f"\"pod install\" bricht ab. In codemagic.yaml vor dem Build "
+        f"\"flutter config {SPM_AUS}\" aufrufen.",
+        {"cocoapods": pods, "swift": swift})
 
 
 def _preflight_befehle(project: Project) -> list:
