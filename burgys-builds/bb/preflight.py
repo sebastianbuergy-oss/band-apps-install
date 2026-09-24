@@ -116,6 +116,8 @@ def run(project: Project, mode: str = MODE_AD_HOC, *,
     add("feed.json", lambda: _check_feed(project))
     add("version.build_number", lambda: _check_version(project))
     add("flutter.paketkonflikt", lambda: _check_paketkonflikt(project))
+    add("codemagic.anbindung", lambda: _check_codemagic_anbindung(project, config))
+    add("codemagic.signierdateien", lambda: _check_codemagic_signierdateien(project, mode))
     results.extend(_eigene_schritte(project))
     results.append(_check_signing(project, mode))
     return PreflightReport(project.id, mode, results)
@@ -392,6 +394,105 @@ def _check_version(project: Project) -> Result:
     return Result("version.build_number", PASS,
                   f"Version {marketing.group(1)}, Buildnummer wird von Buergys Builds vergeben",
                   detail)
+
+
+def _codemagic_config(project: Project) -> dict:
+    if str(project.raw.get("executor") or "").lower() != "codemagic":
+        return {}
+    return dict(project.raw.get("executor_config") or {})
+
+
+def _check_codemagic_anbindung(project: Project, config: dict) -> Result:
+    """Haengt die Codemagic-App wirklich am Repository?
+
+    Eine ueber die Schnittstelle angelegte App traegt provider "generic" und
+    kommt an kein privates Repo. Der Build bricht dann in der ersten Sekunde ab.
+    """
+    name = "codemagic.anbindung"
+    cfg = _codemagic_config(project)
+    if not cfg:
+        return Result(name, SKIP, "dieses Projekt baut nicht bei Codemagic")
+    app_id = cfg.get("app_id") or ""
+    token_datei = cfg.get("token_file") or ""
+    if not app_id or not token_datei:
+        return Result(name, FAIL, "app_id oder token_file fehlt in executor_config")
+    pfad = Path(token_datei).expanduser()
+    if not pfad.exists():
+        return Result(name, WARN, f"Tokendatei fehlt ({pfad}) - nicht nachpruefbar")
+    if config.get("offline"):
+        return Result(name, SKIP, "offline angefordert")
+
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    basis = (cfg.get("api_base") or "https://api.codemagic.io").rstrip("/")
+    anfrage = urllib.request.Request(f"{basis}/apps/{app_id}")
+    anfrage.add_header("x-auth-token", pfad.read_text(encoding="utf-8").strip())
+    anfrage.add_header("User-Agent", "burgys-builds")
+    try:
+        with urllib.request.urlopen(anfrage, timeout=15) as antwort:
+            daten = _json.loads(antwort.read().decode())
+    except urllib.error.HTTPError as fehler:
+        return Result(name, FAIL, f"Codemagic antwortet mit {fehler.code} auf die App {app_id}")
+    except Exception as fehler:  # kein Netz ist kein Codefehler
+        return Result(name, WARN, f"Codemagic nicht erreichbar: {fehler}")
+
+    app = daten.get("application", daten)
+    repo = app.get("repository") or {}
+    anbieter = (repo.get("provider") or "").lower()
+    if anbieter in ("", "generic"):
+        return Result(name, FAIL,
+                      "die Codemagic-App ist nur 'manuell hinzugefuegt' und kommt an kein "
+                      "privates Repo - in der Oberflaeche neu anlegen, nicht ueber die "
+                      "Schnittstelle",
+                      {"provider": anbieter or "(leer)", "app": app.get("appName")})
+    erwartet = (project.raw.get("repository") or "").rstrip("/").removesuffix(".git")
+    gemeldet = (repo.get("htmlUrl") or "").rstrip("/").removesuffix(".git")
+    if erwartet and gemeldet and erwartet.lower() != gemeldet.lower():
+        return Result(name, FAIL,
+                      f"Codemagic baut {gemeldet}, im Projekt steht {erwartet}",
+                      {"codemagic": gemeldet, "projekt": erwartet})
+    return Result(name, PASS,
+                  f"{app.get('appName')} haengt ueber {anbieter} an {gemeldet or erwartet}")
+
+
+def _check_codemagic_signierdateien(project: Project, mode: str) -> Result:
+    """Nennt codemagic.yaml die Dateien, die dort auch hinterlegt sind?
+
+    Codemagic prueft die Signierung gegen seinen eigenen Bestand, nicht gegen
+    Apple. Welche Dateien dort liegen, gibt die Schnittstelle nicht her - also
+    wird der Name einmal bewusst in der Projektdatei vermerkt und hier
+    gegengelesen.
+    """
+    name = "codemagic.signierdateien"
+    if not _codemagic_config(project):
+        return Result(name, SKIP, "dieses Projekt baut nicht bei Codemagic")
+    spec = project.signing.get(mode) or {}
+    profil = spec.get("codemagic_profile")
+    zertifikat = spec.get("codemagic_certificate")
+    if not profil or not zertifikat:
+        return Result(name, FAIL,
+                      "codemagic_profile oder codemagic_certificate fehlt im Signing. "
+                      "Beide muessen bei Codemagic unter Code signing identities liegen; "
+                      "der Name gehoert hier hinterlegt, sonst merkt es erst der Mac.")
+    konfig = project.path() / "codemagic.yaml"
+    if not konfig.exists():
+        return Result(name, FAIL, "codemagic.yaml fehlt")
+    # Kommentare zaehlen nicht: sonst loest die Erklaerung, warum etwas nicht
+    # mehr dasteht, genau die Warnung dagegen aus.
+    text = "\n".join(z.split("#", 1)[0] for z in
+                     konfig.read_text(encoding="utf-8", errors="replace").splitlines())
+    fehlt = [n for n in (profil, zertifikat) if n not in text]
+    if fehlt:
+        return Result(name, FAIL,
+                      "codemagic.yaml nennt nicht: " + ", ".join(fehlt),
+                      {"erwartet": [profil, zertifikat]})
+    if "distribution_type" in text:
+        return Result(name, WARN,
+                      "codemagic.yaml enthaelt distribution_type - automatische Signierung "
+                      "hat hier schon einmal 'No matching profiles found' ergeben")
+    return Result(name, PASS, f"codemagic.yaml nennt {profil} und {zertifikat}")
 
 
 #: Flutter-Pakete, die es nur als CocoaPod gibt.

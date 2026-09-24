@@ -154,7 +154,9 @@
         "expires": "2027-08-14",
         "certificate_expires": "2027-08-14",
         "expects_provisioned_devices": false,
-        "app_store_apple_id": "6815511058"
+        "app_store_apple_id": "6815511058",
+        "codemagic_profile": "spielchischte-appstore-20260924",
+        "codemagic_certificate": "gosafehome-distribution"
       }
     },
     "ota": {},
