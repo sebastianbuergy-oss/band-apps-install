@@ -86,6 +86,18 @@ def cmd_preflight(args) -> int:
         summary = report.to_dict()["summary"]
         print(f"\n{summary['pass']} ok, {summary['fail']} Fehler, "
               f"{summary['warn']} Warnungen, {summary['skip']} uebersprungen")
+        # Ehrlich bleiben: gruen heisst nicht "der Build geht durch". Wer das
+        # verspricht und einmal danebenliegt, dem glaubt niemand mehr.
+        if report.ok:
+            print("\nGruen heisst: alles, was sich auf diesem Rechner pruefen laesst,")
+            print("stimmt. Keine Garantie fuer den ersten Durchlauf auf dem Mac - dort")
+            print("kommen Xcode, Apple und die Uhrzeit dazu. Was diese Pruefung spart,")
+            print("sind die Anlaeufe davor: falscher Modus, unsauberer Ordner, fehlende")
+            print("Datei, abgelaufenes Signing, Paketkonflikt. Im September 2026 waren")
+            print("69 von 227 Builds vergeblich - die meisten aus solchen Gruenden.")
+        else:
+            print("\nJeder Fehler hier kostet nichts. Derselbe Fehler auf dem Mac kostet")
+            print("eine Buildminute und einen Anlauf.")
     return 0 if report.ok else 1
 
 
