@@ -86,6 +86,19 @@ class TestDryRunNeverPays(ControllerCase):
         self.assertEqual(_PaidExecutor.submitted, [done.build_id])
 
 
+class TestCodemagicKennungen(unittest.TestCase):
+    def test_a_yaml_workflow_name_is_accepted_and_junk_is_not(self):
+        from bb.executors.codemagic import CodemagicExecutor
+        from bb.errors import ValidationError
+        ok = CodemagicExecutor({"app_id": "6abd043937a2d4978e51a2be", "workflow_id": "ios-testflight", "token_file": "x"})
+        ok.kennungen_pruefen()
+        for schlecht in ("ios testflight", "ios/testflight", "", "x" * 65):
+            with self.assertRaises(ValidationError):
+                CodemagicExecutor({"app_id": "6abd043937a2d4978e51a2be", "workflow_id": schlecht, "token_file": "x"}).kennungen_pruefen()
+        with self.assertRaises(ValidationError):
+            CodemagicExecutor({"app_id": "../etc", "workflow_id": "ios-testflight", "token_file": "x"}).kennungen_pruefen()
+
+
 class TestMacOffline(ControllerCase):
     config_overrides = {"default_executor": "none"}
 

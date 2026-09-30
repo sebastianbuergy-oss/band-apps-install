@@ -34,6 +34,10 @@ API = "https://api.codemagic.io"
 MAX_ARTEFAKT_BYTES = 512 * 1024 * 1024
 
 ID_RE = re.compile(r"^[A-Za-z0-9]{12,40}$")
+# Ein Workflow aus codemagic.yaml heisst so, wie er in der Datei steht ("ios-testflight") - kein
+# Hex. Der erste echte Build ueber Buergys Builds (30.09.2026, Haushaltsgeld) blieb genau daran
+# haengen: "workflow_id 'ios-testflight' sieht nicht wie eine Kennung aus".
+WORKFLOW_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 #: Codemagic kennt mehr Zustaende als wir. Alles, was nicht hier steht, gilt als laufend.
 FERTIG = {"finished": "SUCCESS", "failed": "FAILED", "canceled": "CANCELLED",
@@ -115,14 +119,19 @@ class CodemagicExecutor(MacExecutor):
                    if str(b.get("status", "")).lower() not in FERTIG]
         return BUSY if laufend else AVAILABLE
 
+    def kennungen_pruefen(self) -> None:
+        """app_id ist eine Codemagic-Kennung (Hex), workflow_id der Name aus codemagic.yaml."""
+        if not ID_RE.match(self.app_id):
+            raise ValidationError(f"CodemagicExecutor: app_id {self.app_id!r} sieht nicht wie eine Kennung aus")
+        if not WORKFLOW_RE.match(self.workflow_id):
+            raise ValidationError(f"CodemagicExecutor: workflow_id {self.workflow_id!r} ist kein gueltiger Workflow-Name")
+
     def submit(self, job: MacJob) -> str:
         if not self.configured():
             raise ExecutorUnavailable(
                 "CodemagicExecutor: app_id, workflow_id oder token_file fehlen."
             )
-        for wert, feld in ((self.app_id, "app_id"), (self.workflow_id, "workflow_id")):
-            if not ID_RE.match(wert):
-                raise ValidationError(f"CodemagicExecutor: {feld} {wert!r} sieht nicht wie eine Kennung aus")
+        self.kennungen_pruefen()
         antwort = self._request("POST", "/builds", {
             "appId": self.app_id,
             "workflowId": self.workflow_id,
