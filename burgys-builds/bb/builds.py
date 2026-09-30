@@ -18,7 +18,7 @@ from .buildlog import BuildLog
 from .costguard import CostGuard
 from .errors import (BurgysError, CostGuardBlocked, ExecutorUnavailable,
                      ValidationError)
-from .executors import MacJob, get_executor
+from .executors import MacJob, MacJobResult, get_executor
 from .ids import make_build_id, validate_commit
 from .limits import BuildLimiter
 from .manifest import BuildManifest, BuildNumbers
@@ -349,15 +349,31 @@ class BuildController:
                 profile_name=(project.signing.get(manifest.get("mode")) or {}).get("profile_name", ""),
                 team_id=project.team_id, dry_run=manifest.is_dry_run,
             )
-            handle = executor.submit(job)
-            self.audit.record(A.SIGNING_USED, project=project.id, build_id=build_id,
-                              executor=executor.name,
-                              detail={"profile_name": job.profile_name,
-                                      "mode": job.mode})
-            self._state(manifest, S.MAC_BUILDING, f"Handle {handle}")
+            if manifest.is_dry_run and executor.produces_real_ipa:
+                # Ein Probelauf darf nie Minuten kosten. Bis 30.09.2026 ging der Auftrag hier
+                # trotzdem an den Executor - bei Codemagic waere das ein echter, bezahlter Build
+                # unter dem Etikett "Probelauf" gewesen (aufgefallen, als Sebastian den Knopf in
+                # Buergys Agent drueckte). Der Mac-Schritt wird ausgelassen und das Ergebnis als
+                # simuliert markiert; alles davor (Preflight, Tests, Kostenbremse) ist gelaufen.
+                handle = f"dryrun:{build_id}"
+                self._state(manifest, S.MAC_BUILDING,
+                            f"DRY RUN - {executor.name} wird nicht beauftragt, das kostet Minuten")
+                result = MacJobResult(
+                    state="SUCCESS", minutes=0.0, simulated=True,
+                    detail=(f"DRY RUN - {executor.name} wurde nicht beauftragt (das waere ein "
+                            f"echter, bezahlter Build). Geplant war: {job.scheme} "
+                            f"{job.marketing_version} ({job.build_number}) im Modus {job.mode} "
+                            f"mit Profil {job.profile_name}."))
+            else:
+                handle = executor.submit(job)
+                self.audit.record(A.SIGNING_USED, project=project.id, build_id=build_id,
+                                  executor=executor.name,
+                                  detail={"profile_name": job.profile_name,
+                                          "mode": job.mode})
+                self._state(manifest, S.MAC_BUILDING, f"Handle {handle}")
 
-            result = self._await(executor, handle, manifest, poll_interval,
-                                 max_wait_minutes)
+                result = self._await(executor, handle, manifest, poll_interval,
+                                     max_wait_minutes)
             manifest.update(mac_minutes=round(result.minutes, 2))
             if not manifest.is_dry_run and result.minutes:
                 self.cost_guard.record_minutes(executor.cost_resource, result.minutes)

@@ -46,6 +46,46 @@ class _HangingExecutor(MacExecutor):
         return MacJobResult(state=S.MAC_BUILDING, detail="laeuft und laeuft")
 
 
+@register
+class _PaidExecutor(MacExecutor):
+    """Ein echter, kostenpflichtiger Executor (wie Codemagic): submit darf ein Probelauf nie erreichen."""
+    name = "test-paid"
+    cost_resource = "windows_local"
+    produces_real_ipa = True
+    submitted: list = []
+
+    def availability(self): return AVAILABLE
+    def submit(self, job):
+        _PaidExecutor.submitted.append(job.build_id)
+        return "h"
+    def poll(self, handle):
+        return MacJobResult(state="SUCCESS", detail="echter Build", artifact_path=None)
+
+
+class TestDryRunNeverPays(ControllerCase):
+    config_overrides = {"default_executor": "test-paid"}
+
+    def setUp(self):
+        super().setUp()
+        _PaidExecutor.submitted.clear()
+
+    def test_a_dry_run_never_reaches_a_paid_executor(self):
+        self.controller.request_build("testapp", "AD_HOC", requested_by="agent", dry_run=True)
+        done = self.controller.run_next(poll_interval=0)
+        self.assertEqual(_PaidExecutor.submitted, [], "der Probelauf hat den Executor beauftragt")
+        self.assertEqual(done.status, S.SUCCESS)
+        self.assertIn("DRY RUN", done.display_status())
+        self.assertIn("nicht beauftragt", " ".join(h.get("note", "") for h in done.get("state_history")))
+        self.assertEqual(done.get("mac_minutes"), 0.0)
+        self.assertIsNone(done.get("artifact_sha256"))
+
+    def test_a_real_build_still_reaches_the_executor(self):
+        self.controller.request_build("testapp", "AD_HOC", requested_by="sebastian",
+                                      approved_by="sebastian")
+        done = self.controller.run_next(poll_interval=0)
+        self.assertEqual(_PaidExecutor.submitted, [done.build_id])
+
+
 class TestMacOffline(ControllerCase):
     config_overrides = {"default_executor": "none"}
 
