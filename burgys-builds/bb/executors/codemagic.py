@@ -119,6 +119,15 @@ class CodemagicExecutor(MacExecutor):
                    if str(b.get("status", "")).lower() not in FERTIG]
         return BUSY if laufend else AVAILABLE
 
+    def auftrag(self, job: MacJob) -> dict:
+        """Der Koerper des Startaufrufs - als eigene Funktion, damit eine Probe ihn ohne Netz sieht."""
+        return {
+            "appId": self.app_id,
+            "workflowId": self.workflow_id,
+            "branch": job.branch or self.branch,
+            "environment": {"variables": {"BURGYS_BUILD_NUMBER": str(job.build_number)}},
+        }
+
     def kennungen_pruefen(self) -> None:
         """app_id ist eine Codemagic-Kennung (Hex), workflow_id der Name aus codemagic.yaml."""
         if not ID_RE.match(self.app_id):
@@ -132,11 +141,10 @@ class CodemagicExecutor(MacExecutor):
                 "CodemagicExecutor: app_id, workflow_id oder token_file fehlen."
             )
         self.kennungen_pruefen()
-        antwort = self._request("POST", "/builds", {
-            "appId": self.app_id,
-            "workflowId": self.workflow_id,
-            "branch": job.branch or self.branch,
-        })
+        # Die Buildnummer kommt von Buergys Builds, nicht von Codemagics Zaehler: Der erste echte
+        # Lauf (30.09.2026) lieferte eine IPA mit Nummer 4, vergeben war 7 - die Pruefung auf Windows
+        # lehnte sie ab. codemagic.yaml liest BURGYS_BUILD_NUMBER, wenn gesetzt.
+        antwort = self._request("POST", "/builds", self.auftrag(job))
         handle = str(antwort.get("buildId") or "")
         if not handle:
             raise ExecutorUnavailable(f"Codemagic hat keine Build-Kennung geliefert: {antwort}")

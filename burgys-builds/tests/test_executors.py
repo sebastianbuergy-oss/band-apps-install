@@ -99,6 +99,17 @@ class TestCodemagicKennungen(unittest.TestCase):
             CodemagicExecutor({"app_id": "../etc", "workflow_id": "ios-testflight", "token_file": "x"}).kennungen_pruefen()
 
 
+    def test_the_build_number_travels_to_codemagic(self):
+        from bb.executors.codemagic import CodemagicExecutor
+        ex = CodemagicExecutor({"app_id": "6abd043937a2d4978e51a2be", "workflow_id": "ios-testflight", "token_file": "x"})
+        job = MacJob(build_id="BB-1", project_id="p", repository="r", branch="main", commit="c", mode="APP_STORE_RELEASE",
+                     scheme="Runner", xcodeproj="ios/Runner.xcodeproj", bundle_id="ch.b.x", build_number=7, marketing_version="1.0", profile_name="p")
+        koerper = ex.auftrag(job)
+        self.assertEqual(koerper["environment"]["variables"]["BURGYS_BUILD_NUMBER"], "7")
+        self.assertEqual(koerper["workflowId"], "ios-testflight")
+        self.assertEqual(koerper["branch"], "main")
+
+
 class TestMacOffline(ControllerCase):
     config_overrides = {"default_executor": "none"}
 
