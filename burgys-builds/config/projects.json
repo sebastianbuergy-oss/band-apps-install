@@ -173,5 +173,64 @@
       "token_file": "C:/Users/Sebas/.burgys/codemagic_token",
       "instance_type": "mac_mini_m2"
     }
+  },
+  {
+    "id": "haushaltsgeld",
+    "name": "Buergys Haushaltsgeld",
+    "code": "HHG",
+    "repository": "https://github.com/sebastianbuergy-oss/haushaltsgeld-ios",
+    "branch": "main",
+    "local_path": "C:/Users/Sebas/Projects/Haushaltsbudget",
+    "kind": "flutter",
+    "bundle_id": "ch.buergys.haushaltsgeld",
+    "scheme": "Runner",
+    "xcodeproj": "ios/Runner.xcodeproj",
+    "display_name": "Haushaltsgeld",
+    "marketing_version": "0.1.0",
+    "team_id": "38A4N26LD5",
+    "preflight_command": [
+      [
+        "flutter",
+        "analyze",
+        "--no-fatal-infos"
+      ],
+      [
+        "flutter",
+        "test"
+      ]
+    ],
+    "required_files": [
+      "pubspec.yaml",
+      "lib/main.dart",
+      "test/main_test.dart",
+      "codemagic.yaml",
+      "ios/Runner/Info.plist"
+    ],
+    "signing": {
+      "APP_STORE_RELEASE": {
+        "profile_name": "Haushaltsgeld ios_app_store 20260930",
+        "certificate_common_name": "Apple Distribution: Sebastian Brgy (38A4N26LD5)",
+        "expires": "2027-08-14",
+        "certificate_expires": "2027-08-14",
+        "expects_provisioned_devices": false,
+        "app_store_apple_id": "6817773755",
+        "codemagic_profile": "haushaltsgeld-appstore-20260930",
+        "codemagic_certificate": "gosafehome-distribution"
+      }
+    },
+    "ota": {},
+    "modes": [
+      "APP_STORE_RELEASE"
+    ],
+    "migration_state": "BURGYS_BUILDS_PARALLEL",
+    "enabled": true,
+    "executor": "codemagic",
+    "executor_config": {
+      "app_id": "6abd043937a2d4978e51a2be",
+      "workflow_id": "ios-testflight",
+      "branch": "main",
+      "token_file": "C:/Users/Sebas/.burgys/codemagic_token",
+      "instance_type": "mac_mini_m2"
+    }
   }
 ]
