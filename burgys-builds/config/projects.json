@@ -231,6 +231,7 @@
       "branch": "main",
       "token_file": "C:/Users/Sebas/.burgys/codemagic_token",
       "instance_type": "mac_mini_m2"
-    }
+    },
+    "build_number_floor": 3
   }
 ]
